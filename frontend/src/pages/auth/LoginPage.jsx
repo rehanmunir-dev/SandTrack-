@@ -53,7 +53,7 @@ export default function LoginPage() {
         <section className="hidden relative overflow-hidden bg-primary-container lg:flex lg:w-3/5">
           <div className="absolute inset-0 z-0">
             <img
-              src="/login-bg.jpg.png"
+              src="/login-bg.webp"
               alt="Heavy industrial logistics terminal in Pakistan"
               className="h-full w-full object-cover opacity-60 grayscale transition-all duration-700 hover:grayscale-0"
             />
