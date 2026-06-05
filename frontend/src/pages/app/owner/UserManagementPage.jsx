@@ -179,10 +179,10 @@ export default function UserManagementPage() {
 
   // Badge mapping helper
   const roleBadgeStyles = {
-    OPERATOR: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    ACCOUNTANT: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-    WATCHMAN: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-    DRIVER: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400'
+    OPERATOR: 'bg-blue-700 text-white ring-1 ring-blue-900/10',
+    ACCOUNTANT: 'bg-emerald-700 text-white ring-1 ring-emerald-900/10',
+    WATCHMAN: 'bg-amber-700 text-white ring-1 ring-amber-900/10',
+    DRIVER: 'bg-slate-700 text-white ring-1 ring-slate-900/10'
   }
 
   return (
