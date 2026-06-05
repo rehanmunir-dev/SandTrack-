@@ -1,0 +1,46 @@
+{
+  "name": "receipt-system-backend",
+  "version": "1.0.0",
+  "description": "Receipt System Backend API",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "restart": "npx kill-port 5000 && node --watch server.js",
+    "migrate": "node db/migrate.js",
+    "cleanup:e2e": "node scripts/cleanupE2ETestData.js",
+    "test": "jest --runInBand --forceExit",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "receipt",
+    "system",
+    "api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "pg": "^8.20.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.5",
+    "@types/jest": "^30.0.0",
+    "babel-jest": "^30.4.1",
+    "babel-plugin-transform-import-meta": "^2.3.3",
+    "jest": "^30.4.2",
+    "nodemon": "^3.0.0",
+    "supertest": "^7.2.2"
+  }
+}

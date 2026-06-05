@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS consignments (
+  id SERIAL PRIMARY KEY,
+  consignment_number VARCHAR(30) UNIQUE NOT NULL,
+  driver_id INT REFERENCES drivers(id) ON DELETE SET NULL,
+  truck_id INT REFERENCES trucks(id) ON DELETE SET NULL,
+  operator_id INT REFERENCES users(id) ON DELETE SET NULL,
+  material_type VARCHAR(50) DEFAULT 'Sand',
+  weight_tons DECIMAL(10,2),
+  origin_location VARCHAR(100),
+  destination VARCHAR(100),
+  status VARCHAR(40) DEFAULT 'SCAN_PENDING' CHECK (status IN ('SCAN_PENDING', 'IN_TRANSIT', 'ARRIVED', 'DELIVERY_PENDING_VERIFICATION', 'DELIVERED', 'BILLED', 'CLOSED', 'FLAGGED', 'CANCELLED')),
+  price DECIMAL(12,2) DEFAULT 0,
+  discount DECIMAL(12,2) DEFAULT 0,
+  qr_token VARCHAR(255) UNIQUE,
+  qr_expires_at TIMESTAMPTZ,
+  arrived_at TIMESTAMPTZ,
+  delivery_verified_by INT REFERENCES users(id) ON DELETE SET NULL,
+  delivery_verified_at TIMESTAMPTZ,
+  is_flagged BOOLEAN DEFAULT false,
+  flag_reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);

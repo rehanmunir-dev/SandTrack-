@@ -1,0 +1,8 @@
+export const formatDate = (iso) => {
+  if (!iso) return ''
+  return new Date(iso).toLocaleDateString('en-PK', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric' 
+  })
+}

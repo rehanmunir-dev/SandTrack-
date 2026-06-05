@@ -1,0 +1,32 @@
+export const OWNER_ROUTES = {
+  DASHBOARD: '/owner/dashboard',
+  ACCOUNTS: '/owner/accounts',
+  CONSIGNMENTS: '/owner/consignments',
+  CONSIGNMENT_DETAIL: '/owner/consignments/:id',
+  TRUCKS: '/owner/trucks',
+  APPROVALS: '/owner/approvals',
+  TERMINAL: '/owner/terminal',
+  ALERTS: '/owner/alerts',
+  USERS: '/owner/users',
+  SETTINGS: '/owner/settings',
+  SUPPORT: '/owner/support',
+  PROFILE: '/owner/profile',
+  SEARCH: '/owner/search',
+  ANALYTICS: '/owner/analytics',
+  ACTIVITY: '/owner/activity',
+  GATE_LOGS: '/owner/gate-logs',
+}
+
+export const OWNER_NAV_ITEMS = [
+  { label: 'Dashboard', path: OWNER_ROUTES.DASHBOARD, icon: 'dashboard' },
+  { label: 'Analytics', path: OWNER_ROUTES.ANALYTICS, icon: 'query_stats' },
+  { label: 'Accounts', path: OWNER_ROUTES.ACCOUNTS, icon: 'account_balance_wallet' },
+  { label: 'Consignments', path: OWNER_ROUTES.CONSIGNMENTS, icon: 'local_shipping' },
+  { label: 'Trucks', path: OWNER_ROUTES.TRUCKS, icon: 'local_taxi' },
+  { label: 'Approvals', path: OWNER_ROUTES.APPROVALS, icon: 'fact_check' },
+  { label: 'Staff Activity Log', path: OWNER_ROUTES.ACTIVITY, icon: 'receipt_long' },
+  { label: 'Gate Logs', path: OWNER_ROUTES.GATE_LOGS, icon: 'border_color' },
+  { label: 'Terminal', path: OWNER_ROUTES.TERMINAL, icon: 'warehouse' },
+  { label: 'Alerts', path: OWNER_ROUTES.ALERTS, icon: 'warning' },
+  { label: 'Staff Management', path: OWNER_ROUTES.USERS, icon: 'group' },
+]

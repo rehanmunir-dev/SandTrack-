@@ -1,0 +1,130 @@
+import { useMemo, useState, useEffect } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
+import SectionCard from '../../../components/common/SectionCard'
+import StatusBadge from '../../../components/StatusBadge'
+import { useAuth } from '../../../context/AuthContext'
+import { useRoleSystem } from '../../../context/roleSystem/RoleSystemContext'
+
+export default function DriverDashboardPage() {
+  const { currentUser } = useAuth()
+  const { consignments, drivers } = useRoleSystem()
+
+  const [urlSessionCode, setUrlSessionCode] = useState(null)
+  const [sessionExpired, setSessionExpired] = useState(false)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const session = params.get('session')
+    const expires = params.get('expires')
+
+    if (session && expires) {
+      if (Date.now() > Number(expires)) {
+        setSessionExpired(true)
+      } else {
+        setUrlSessionCode(session)
+      }
+    }
+  }, [])
+
+  const assignedDriver = useMemo(() => {
+    if (!currentUser) {
+      return null
+    }
+
+    // 1. Match by database user ID first (100% exact match)
+    const byUserId = drivers.find((driver) => Number(driver.userId) === Number(currentUser.id))
+    if (byUserId) {
+      return byUserId
+    }
+
+    if (currentUser.driverProfileId) {
+      const byProfileId = drivers.find((driver) => driver.id === currentUser.driverProfileId)
+      if (byProfileId) {
+        return byProfileId
+      }
+    }
+
+    return drivers.find((driver) => driver.name?.trim().toLowerCase() === currentUser.name?.trim().toLowerCase()) || null
+  }, [drivers, currentUser])
+
+  const assignedConsignments = useMemo(() => consignments.filter((item) => item.driverId === assignedDriver?.id), [consignments, assignedDriver])
+  
+  const currentTrip = useMemo(() => {
+    if (urlSessionCode && !sessionExpired) {
+      return consignments.find(c => c.qrCode === urlSessionCode) || assignedConsignments[0] || null
+    }
+    return assignedConsignments[0] || null
+  }, [urlSessionCode, sessionExpired, consignments, assignedConsignments])
+
+  // Mock Activity Log
+  const activityLog = useMemo(() => {
+    if (!currentTrip) return []
+    const log = [
+      { time: currentTrip.createdAt, text: 'Consignment created and assigned' }
+    ]
+    if (currentTrip.gateVerifiedAt) log.push({ time: currentTrip.gateVerifiedAt, text: 'Gate entry verified' })
+    if (currentTrip.onWayAt) log.push({ time: currentTrip.onWayAt, text: 'In transit to destination' })
+    if (currentTrip.deliveredAt) log.push({ time: currentTrip.deliveredAt, text: 'Delivered successfully' })
+    if (currentTrip.isFlagged) log.push({ time: new Date().toISOString(), text: `Flagged: ${currentTrip.flagReason || 'Issue detected'}` })
+    return log.sort((a, b) => new Date(b.time) - new Date(a.time))
+  }, [currentTrip])
+
+  return (
+    <div className="space-y-6">
+      {sessionExpired && (
+        <div className="rounded border border-error bg-error-container p-4 text-on-error-container">
+          <p className="font-bold text-lg">QR Session Expired</p>
+          <p className="text-sm">The 5-minute link has expired. Please request a new link from the operator.</p>
+        </div>
+      )}
+      
+      <SectionCard title="Driver Dashboard" subtitle="One trip at a time. Show the assigned QR at the gate.">
+        {currentTrip && !sessionExpired ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-5 rounded-xl border border-outline-variant/15 bg-surface-container-lowest p-5 sm:p-6">
+              <div className="flex flex-col items-center text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Active QR</p>
+                <div className="mt-4 inline-flex rounded-3xl bg-white p-5 shadow-sm">
+                  <QRCodeSVG value={currentTrip.qrCode} size={240} level="M" includeMargin />
+                </div>
+                <p className="mt-4 break-all text-sm font-semibold text-on-surface-variant">{currentTrip.qrCode}</p>
+                <p className="mt-2 text-xs text-on-surface-variant">Consignment {currentTrip.consignmentId}</p>
+                {currentTrip.isFlagged && <p className="mt-2 font-bold text-error">⚠️ THIS CONSIGNMENT IS FLAGGED ⚠️</p>}
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 rounded-2xl border border-outline-variant/15 bg-surface-container-high p-4 text-sm sm:grid-cols-2">
+                <p><strong>Driver:</strong> {assignedDriver?.name || 'N/A'}</p>
+                <p><strong>Truck:</strong> {currentTrip.truckId}</p>
+                <p><strong>Origin:</strong> {currentTrip.originTerminal || 'N/A'}</p>
+                <p><strong>Destination:</strong> {currentTrip.destination || 'N/A'}</p>
+                <p><strong>Status:</strong> <StatusBadge status={currentTrip.status} /></p>
+                <p><strong>Net Wt:</strong> {currentTrip.netWeight} Tons</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="font-headline text-lg font-bold">Trip Activity Log</h3>
+              <div className="space-y-3">
+                {activityLog.map((log, index) => (
+                  <div key={index} className="flex gap-4 border-l-2 border-primary pl-4 py-1">
+                    <div className="text-xs text-on-surface-variant whitespace-nowrap w-20">
+                      {new Date(log.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </div>
+                    <div className="text-sm font-medium text-on-surface">
+                      {log.text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : !sessionExpired ? (
+          <div className="rounded-xl border border-outline-variant/15 bg-surface-container-lowest p-6 text-center">
+            <p className="text-sm font-semibold text-on-surface">No active consignment assigned yet.</p>
+            <p className="mt-2 text-sm text-on-surface-variant">Wait for the operator to assign your trip, then the QR will appear here.</p>
+          </div>
+        ) : null}
+      </SectionCard>
+    </div>
+  )
+}

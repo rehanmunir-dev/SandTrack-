@@ -1,0 +1,17 @@
+node_modules/
+.DS_Store
+*.log
+dist/
+build/
+.env
+.env.*
+!.env.example
+.vscode/settings.json
+coverage/
+frontend/dist/
+backend/uploads/
+backend/pgdata/
+uploads/
+playwright-report/
+test-results/
+npm-debug.log*

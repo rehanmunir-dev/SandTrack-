@@ -1,0 +1,204 @@
+import { useState } from 'react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { OWNER_NAV_ITEMS, OWNER_ROUTES } from '../../constants/owner/routes'
+import { useOwnerData } from '../../context/owner/OwnerContext'
+import { useAuth } from '../../context/AuthContext'
+import { ROLE_LABELS } from '../../rbac/roles'
+import SearchBar from './SearchBar'
+
+function isActive(pathname, itemPath) {
+  return pathname === itemPath || pathname.startsWith(`${itemPath}/`)
+}
+
+export default function OwnerLayout() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  useOwnerData()
+  const { currentUser, logout } = useAuth()
+  const [globalSearch, setGlobalSearch] = useState('')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const title = OWNER_NAV_ITEMS.find((item) => isActive(location.pathname, item.path))?.label || 'Owner'
+  const initials = (currentUser?.name || 'ST')
+    .split(' ')
+    .filter(Boolean)
+    .map((chunk) => chunk[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+  const apiOrigin = import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
+    : window.location.origin
+  const profilePictureSrc = currentUser?.profilePictureUrl
+    ? `${apiOrigin}${currentUser.profilePictureUrl}`
+    : ''
+
+  function submitGlobalSearch() {
+    const query = globalSearch.trim()
+    navigate(`${OWNER_ROUTES.SEARCH}?q=${encodeURIComponent(query)}`)
+  }
+
+  return (
+    <div className="bg-background font-body text-on-background selection:bg-primary-fixed selection:text-on-primary-fixed">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-80 flex-col bg-slate-50 p-7 lg:flex">
+        <div className="mb-10">
+          <div className="flex justify-center">
+            <img src="/sandtrack-logo.jpg" alt="SandTrack" className="h-auto w-48 object-contain" />
+          </div>
+        </div>
+
+        <nav className="no-scrollbar flex-1 space-y-1 overflow-y-auto pr-2">
+          {OWNER_NAV_ITEMS.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center gap-3 rounded-lg px-4 py-3.5 text-base font-semibold transition-all ${
+                isActive(location.pathname, item.path)
+                  ? 'border-r-4 border-blue-900 bg-slate-100 text-blue-900'
+                  : 'text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              <span className="material-symbols-outlined">{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+
+      </aside>
+
+      {isMobileMenuOpen ? (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="absolute inset-0 bg-black/40"
+            aria-label="Close menu"
+          />
+          <aside className="relative z-10 h-full w-72 max-w-[80vw] bg-slate-50 p-6 shadow-2xl">
+            <div className="mb-8 flex items-center justify-between">
+              <img src="/sandtrack-logo.jpg" alt="SandTrack" className="h-10 w-auto object-contain" />
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="rounded-full border border-outline-variant/30 p-2 text-on-surface-variant"
+                aria-label="Close menu"
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+              </button>
+            </div>
+            <nav className="no-scrollbar flex-1 space-y-1 overflow-y-auto pr-1">
+              {OWNER_NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all ${
+                    isActive(location.pathname, item.path)
+                      ? 'border-l-4 border-blue-900 bg-slate-100 text-blue-900'
+                      : 'text-slate-500 hover:bg-slate-100'
+                  }`}
+                >
+                  <span className="material-symbols-outlined">{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+            <div className="mt-6 space-y-2 border-t border-outline-variant/20 pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false)
+                  navigate(OWNER_ROUTES.PROFILE)
+                }}
+                className="flex w-full items-center gap-3 rounded-lg border border-outline-variant/30 px-4 py-3 text-sm font-semibold text-on-surface"
+              >
+                <span className="material-symbols-outlined text-[20px]">account_circle</span>
+                Profile
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false)
+                  logout()
+                }}
+                className="flex w-full items-center gap-3 rounded-lg border border-error/40 px-4 py-3 text-sm font-semibold text-error"
+              >
+                <span className="material-symbols-outlined text-[20px]">logout</span>
+                Log out
+              </button>
+            </div>
+          </aside>
+        </div>
+      ) : null}
+
+      <main className="min-h-screen lg:ml-80">
+        <header className="sticky top-0 z-30 border-b border-outline-variant/20 bg-surface-container-lowest/90 backdrop-blur">
+          <div className="px-3 py-4 sm:px-5 md:px-7 lg:px-10">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    className="inline-flex items-center justify-center rounded-full border border-outline-variant/30 p-2 text-on-surface-variant lg:hidden"
+                    aria-label="Open menu"
+                  >
+                    <span className="material-symbols-outlined text-base">menu</span>
+                  </button>
+                  <div className="min-w-0">
+                    <h2 className="font-headline text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-on-background truncate">
+                      {title}
+                    </h2>
+                    <p className="text-xs sm:text-sm font-medium text-on-surface-variant">Owner and super admin control center</p>
+                  </div>
+                </div>
+              </div>
+              <div className="w-full sm:w-auto sm:max-w-sm md:max-w-md lg:max-w-2xl">
+                <div className="flex flex-col sm:flex-row items-center gap-2">
+                  <div className="flex-1 sm:flex-initial sm:min-w-0">
+                    <SearchBar
+                      value={globalSearch}
+                      onChange={setGlobalSearch}
+                      placeholder="Search: receipt, vehicle"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={submitGlobalSearch}
+                    className="hidden sm:block rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white flex-shrink-0"
+                  >
+                    Search
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(OWNER_ROUTES.PROFILE)}
+                    className="hidden sm:flex items-center gap-2 sm:gap-3 rounded-full border border-outline-variant/20 bg-surface-container-low px-2 sm:px-3 py-2 transition-colors hover:bg-surface-container flex-shrink-0"
+                    aria-label="Open profile"
+                  >
+                    <div className="flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center overflow-hidden rounded-full bg-primary text-xs sm:text-sm font-bold text-on-primary">
+                      {profilePictureSrc ? (
+                        <img src={profilePictureSrc} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        initials
+                      )}
+                    </div>
+                    <div className="hidden text-right xl:block">
+                      <p className="text-xs sm:text-sm font-bold text-on-background">{currentUser?.name}</p>
+                      <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                        {ROLE_LABELS[currentUser?.role] || currentUser?.role}
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="p-3 sm:p-5 md:p-7 lg:p-10">
+          <Outlet />
+        </div>
+      </main>
+    </div>
+  )
+}

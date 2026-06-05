@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS expenses (
+  id SERIAL PRIMARY KEY,
+  category VARCHAR(30) NOT NULL CHECK (category IN ('SALARY', 'PETTY_CASH', 'MAINTENANCE', 'OTHER')),
+  amount DECIMAL(12,2) NOT NULL,
+  description TEXT,
+  recorded_by INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
