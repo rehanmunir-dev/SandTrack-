@@ -35,7 +35,7 @@ export async function getTruckById(req, res, next) {
 }
 
 export async function registerTruck(req, res, next) {
-  const { registrationNumber, vehicleType, wheelCount, ownerName } = req.body
+  const { registrationNumber, vehicleType, wheelCount, ownerName, assignedDriverId } = req.body
 
   if (!registrationNumber || !vehicleType || !wheelCount) {
     return res.status(400).json({ success: false, message: 'Registration number, vehicle type, and wheel count are required' })
@@ -66,12 +66,19 @@ export async function registerTruck(req, res, next) {
     }
 
     const sql = `
-      INSERT INTO trucks (registration_number, vehicle_type, wheel_count, owner_name, status)
-      VALUES ($1, $2, $3, $4, 'ACTIVE')
+      INSERT INTO trucks (registration_number, vehicle_type, wheel_count, owner_name, status, assigned_driver_id)
+      VALUES ($1, $2, $3, $4, 'ACTIVE', $5)
       RETURNING *
     `
-    const values = [registrationNumber, vehicleType, wheelCount, ownerName || '']
+    const values = [registrationNumber, vehicleType, wheelCount, ownerName || '', assignedDriverId || null]
     const { rows } = await pool.query(sql, values)
+
+    if (assignedDriverId) {
+      await pool.query(
+        'UPDATE drivers SET assigned_truck_id = $1 WHERE id = $2',
+        [rows[0].id, assignedDriverId]
+      )
+    }
 
     req.activityLog = {
       action: 'ADDED_TRUCK',
@@ -122,9 +129,14 @@ export async function approveTruck(req, res, next) {
 
 export async function updateTruck(req, res, next) {
   const { id } = req.params
-  const { registrationNumber, vehicleType, wheelCount, ownerName, status } = req.body
+  const { registrationNumber, vehicleType, wheelCount, ownerName, status, assignedDriverId } = req.body
 
   try {
+    const current = await pool.query('SELECT id, assigned_driver_id FROM trucks WHERE id = $1', [id])
+    if (current.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Truck not found' })
+    }
+
     const updates = []
     const values = []
     let counter = 1
@@ -153,6 +165,10 @@ export async function updateTruck(req, res, next) {
       updates.push(`status = $${counter++}`)
       values.push(normalizedStatus)
     }
+    if (assignedDriverId !== undefined) {
+      updates.push(`assigned_driver_id = $${counter++}`)
+      values.push(assignedDriverId || null)
+    }
 
     if (updates.length === 0) {
       return res.status(400).json({ success: false, message: 'No fields to update provided' })
@@ -167,8 +183,20 @@ export async function updateTruck(req, res, next) {
     `
     const { rows } = await pool.query(sql, values)
 
-    if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Truck not found' })
+    if (assignedDriverId !== undefined) {
+      const previousDriverId = current.rows[0].assigned_driver_id
+      if (previousDriverId && String(previousDriverId) !== String(assignedDriverId || '')) {
+        await pool.query(
+          'UPDATE drivers SET assigned_truck_id = NULL WHERE id = $1 AND assigned_truck_id = $2',
+          [previousDriverId, id]
+        )
+      }
+      if (assignedDriverId) {
+        await pool.query(
+          'UPDATE drivers SET assigned_truck_id = $1 WHERE id = $2',
+          [id, assignedDriverId]
+        )
+      }
     }
 
     req.activityLog = {

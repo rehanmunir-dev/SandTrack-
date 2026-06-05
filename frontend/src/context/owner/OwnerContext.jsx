@@ -93,6 +93,7 @@ function mapBackendTruckToOwner(t) {
     id: t.id,
     vehicleNo: t.registration_number || 'N/A',
     ownershipType: t.ownership_type || 'own',
+    assignedDriverId: t.assigned_driver_id || t.assignedDriverId || null,
     assignedTerminalId: 't-hazro-main',
     driverName: t.driver_name || 'N/A',
     logisticsStatus: isApproved ? 'approved' : 'pending',
@@ -459,6 +460,9 @@ export function OwnerProvider({ children }) {
     body.append('phone', payload.phone || '')
     body.append('cnic', payload.cnic || '')
     body.append('licenseNumber', payload.licenseNo || payload.licenseNumber || `LIC-${String(Date.now()).slice(-6)}`)
+    if (payload.assignedTruckId) {
+      body.append('assignedTruckId', payload.assignedTruckId)
+    }
 
     const res = await api.post('/drivers', body, {
       headers: { 'Content-Type': 'multipart/form-data' }
@@ -498,30 +502,55 @@ export function OwnerProvider({ children }) {
       registrationNumber: payload.vehicleNo || payload.registrationNumber || '',
       vehicleType: payload.type || payload.vehicleType || 'Damper',
       wheelCount: Number(payload.wheelCount || payload.wheels || 6),
-      ownerName: payload.ownershipType || payload.ownerName || 'own'
+      ownerName: payload.ownershipType || payload.ownerName || 'own',
+      assignedDriverId: payload.assignedDriverId || null,
     })
     const truck = {
       ...mapBackendTruckToOwner(res.data?.data || res.data || {}),
       ownershipType: payload.ownershipType || payload.ownerName || 'own',
       driverName: null,
-      driverProfileId: null,
+      driverProfileId: payload.assignedDriverId || null,
     }
 
     setTrucks((prev) => [truck, ...prev])
     return truck
   }
 
-  function updateTruck(truckId, patch) {
+  async function updateTruck(truckId, patch) {
+    const res = await api.patch(`/trucks/${truckId}`, {
+      registrationNumber: patch.vehicleNo || patch.registrationNumber,
+      vehicleType: patch.type || patch.vehicleType,
+      wheelCount: patch.wheels || patch.wheelCount,
+      ownerName: patch.ownershipType || patch.ownerName,
+      status: patch.status,
+      assignedDriverId: patch.assignedDriverId || null,
+    })
+    const savedTruck = mapBackendTruckToOwner(res.data?.data || res.data || {})
+
     setTrucks((prev) =>
       prev.map((truck) =>
         truck.id === truckId
           ? {
               ...truck,
               ...patch,
+              ...savedTruck,
             }
           : truck,
       ),
     )
+
+    if (patch.assignedDriverId !== undefined) {
+      setDriverProfiles((prev) =>
+        prev.map((profile) => ({
+          ...profile,
+          assignedTruckId: String(profile.id) === String(patch.assignedDriverId)
+            ? truckId
+            : String(profile.assignedTruckId) === String(truckId)
+              ? null
+              : profile.assignedTruckId,
+        }))
+      )
+    }
   }
 
   function deleteTruck(truckId) {
@@ -539,10 +568,18 @@ export function OwnerProvider({ children }) {
     )
   }
 
-  function updateDriverProfile(profileId, patch) {
+  async function updateDriverProfile(profileId, patch) {
     let previousTruckId = null
     let nextTruckId = null
     let nextDriverName = ''
+
+    await api.patch(`/drivers/${profileId}`, {
+      fullName: patch.fullName,
+      phone: patch.phone,
+      cnic: patch.cnic,
+      licenseNumber: patch.licenseNo || patch.licenseNumber,
+      assignedTruckId: patch.assignedTruckId || null,
+    })
 
     setDriverProfiles((prev) => {
       const existing = prev.find((profile) => profile.id === profileId)

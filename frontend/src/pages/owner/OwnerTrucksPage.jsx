@@ -140,15 +140,19 @@ export default function OwnerTrucksPage() {
     }
   }
 
-  function handleSaveTruck(updatedData) {
+  async function handleSaveTruck(updatedData) {
     if (!selectedTruckForEdit) {
       return
     }
 
-    updateTruck(selectedTruckForEdit.id, updatedData)
-    setIsTruckEditModalOpen(false)
-    setSelectedTruckForEdit(null)
-    setNotice('Truck details updated successfully.')
+    try {
+      await updateTruck(selectedTruckForEdit.id, updatedData)
+      setIsTruckEditModalOpen(false)
+      setSelectedTruckForEdit(null)
+      setNotice('Truck details updated successfully.')
+    } catch (error) {
+      setNotice(error.response?.data?.message || 'Truck details could not be updated.')
+    }
   }
 
   async function handleCreateTruck(truckData) {
@@ -161,15 +165,19 @@ export default function OwnerTrucksPage() {
     }
   }
 
-  function handleSaveDriverProfile(updatedData) {
+  async function handleSaveDriverProfile(updatedData) {
     if (!selectedDriverForEdit) {
       return
     }
 
-    updateDriverProfile(selectedDriverForEdit.id, updatedData)
-    setIsDriverEditModalOpen(false)
-    setSelectedDriverForEdit(null)
-    setNotice('Driver profile updated successfully.')
+    try {
+      await updateDriverProfile(selectedDriverForEdit.id, updatedData)
+      setIsDriverEditModalOpen(false)
+      setSelectedDriverForEdit(null)
+      setNotice('Driver profile updated successfully.')
+    } catch (error) {
+      setNotice(error.response?.data?.message || 'Driver profile could not be updated.')
+    }
   }
 
   function handleDeleteTruck() {
@@ -364,6 +372,7 @@ export default function OwnerTrucksPage() {
           <TruckEditModal
             truck={selectedTruckForEdit}
             trucks={trucks}
+            drivers={driverProfiles}
             onClose={() => {
               setIsTruckEditModalOpen(false)
               setSelectedTruckForEdit(null)

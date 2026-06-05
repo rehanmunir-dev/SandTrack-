@@ -56,6 +56,7 @@ export async function registerDriver(req, res, next) {
       licenseNumber, 
       phone 
     } = req.body
+    const assignedTruckId = req.body.assignedTruckId || req.body.assigned_truck_id || null
 
     if (!fullName || !cnic) {
       await client.query('ROLLBACK')
@@ -105,18 +106,26 @@ export async function registerDriver(req, res, next) {
     const driverResult = await client.query(
       `INSERT INTO drivers
         (user_id, cnic, license_number,
-         face_photo_url, is_approved, is_active)
-       VALUES ($1, $2, $3, $4, false, true)
+         face_photo_url, is_approved, is_active, assigned_truck_id)
+       VALUES ($1, $2, $3, $4, false, true, $5)
        RETURNING *`,
       [
         driverUser.id, 
         cnic, 
         licenseNumber || null, 
-        facePhotoUrl
+        facePhotoUrl,
+        assignedTruckId
       ]
     )
 
     const driver = driverResult.rows[0]
+
+    if (assignedTruckId) {
+      await client.query(
+        'UPDATE trucks SET assigned_driver_id = $1 WHERE id = $2',
+        [driver.id, assignedTruckId]
+      )
+    }
 
     // Step 5: Log activity
     if (req.user && req.user.role !== 'SUPER_ADMIN') {
@@ -199,13 +208,13 @@ export async function approveDriver(req, res, next) {
 
 export async function updateDriver(req, res, next) {
   const { id } = req.params
-  const { fullName, phone, cnic, licenseNumber, status, isActive } = req.body
+  const { fullName, phone, cnic, licenseNumber, status, isActive, assignedTruckId } = req.body
   const client = await pool.connect()
 
   try {
     await client.query('BEGIN')
 
-    const current = await client.query('SELECT id, user_id FROM drivers WHERE id = $1', [id])
+    const current = await client.query('SELECT id, user_id, assigned_truck_id FROM drivers WHERE id = $1', [id])
     if (current.rows.length === 0) {
       await client.query('ROLLBACK')
       return res.status(404).json({ success: false, message: 'Driver not found' })
@@ -228,6 +237,10 @@ export async function updateDriver(req, res, next) {
     if (normalizedActive !== undefined) {
       updates.push(`is_active = $${counter++}`)
       values.push(normalizedActive)
+    }
+    if (assignedTruckId !== undefined) {
+      updates.push(`assigned_truck_id = $${counter++}`)
+      values.push(assignedTruckId || null)
     }
 
     if (updates.length === 0 && fullName === undefined && phone === undefined) {
@@ -270,6 +283,22 @@ export async function updateDriver(req, res, next) {
         `UPDATE users SET ${userUpdates.join(', ')} WHERE id = $${userCounter}`,
         userValues
       )
+    }
+
+    if (assignedTruckId !== undefined) {
+      const previousTruckId = current.rows[0].assigned_truck_id
+      if (previousTruckId && String(previousTruckId) !== String(assignedTruckId || '')) {
+        await client.query(
+          'UPDATE trucks SET assigned_driver_id = NULL WHERE id = $1 AND assigned_driver_id = $2',
+          [previousTruckId, id]
+        )
+      }
+      if (assignedTruckId) {
+        await client.query(
+          'UPDATE trucks SET assigned_driver_id = $1 WHERE id = $2',
+          [id, assignedTruckId]
+        )
+      }
     }
 
     await client.query('COMMIT')

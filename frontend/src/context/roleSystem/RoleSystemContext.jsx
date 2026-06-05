@@ -394,6 +394,9 @@ export function RoleSystemProvider({ children }) {
       body.append('fullName', payload.name || payload.fullName || '')
       body.append('phone', payload.phone || '')
       body.append('licenseNumber', payload.licenseNumber || payload.licenseNo || 'LIC-' + String(Date.now()).slice(-6))
+      if (payload.assignedTruckId) {
+        body.append('assignedTruckId', payload.assignedTruckId)
+      }
       if (payload.facePhoto) {
         body.append('facePhoto', payload.facePhoto)
       }
@@ -411,6 +414,7 @@ export function RoleSystemProvider({ children }) {
       cnic: patch.cnic,
       licenseNumber: patch.licenseNumber || patch.licenseNo,
       status: patch.status,
+      assignedTruckId: patch.assignedTruckId || null,
     })
     await fetchDrivers()
     await fetchActivityLogs()
@@ -425,7 +429,8 @@ export function RoleSystemProvider({ children }) {
       registrationNumber: payload.vehicleNo || payload.registrationNumber || '',
       vehicleType: payload.type || payload.vehicleType || 'Damper',
       wheelCount: Number(payload.wheelCount || payload.wheels || 6),
-      ownerName: payload.ownershipType || payload.ownerName || 'own'
+      ownerName: payload.ownershipType || payload.ownerName || 'own',
+      assignedDriverId: payload.assignedDriverId || null,
     }
     const res = await registerTruckAPI(apiPayload)
     await fetchTrucks()
@@ -440,6 +445,7 @@ export function RoleSystemProvider({ children }) {
       wheelCount: patch.wheels || patch.wheelCount,
       ownerName: patch.ownershipType || patch.ownerName,
       status: patch.status,
+      assignedDriverId: patch.assignedDriverId || null,
     })
     await fetchTrucks()
     await fetchActivityLogs()

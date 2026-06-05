@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 
-export default function TruckEditModal({ truck, onClose, onSave, onDelete, trucks = [] }) {
+export default function TruckEditModal({ truck, onClose, onSave, onDelete, trucks = [], drivers = [] }) {
   const [form, setForm] = useState({
     vehicleNo: '',
     ownershipType: 'own',
+    assignedDriverId: '',
   })
 
   useEffect(() => {
@@ -11,6 +12,7 @@ export default function TruckEditModal({ truck, onClose, onSave, onDelete, truck
       setForm({
         vehicleNo: truck.vehicleNo || '',
         ownershipType: truck.ownershipType || 'own',
+        assignedDriverId: truck.assignedDriverId || truck.driverProfileId || '',
       })
     }
   }, [truck])
@@ -24,6 +26,7 @@ export default function TruckEditModal({ truck, onClose, onSave, onDelete, truck
     onSave({
       vehicleNo: form.vehicleNo.trim(),
       ownershipType: form.ownershipType,
+      assignedDriverId: form.assignedDriverId || null,
     })
   }
 
@@ -74,6 +77,22 @@ export default function TruckEditModal({ truck, onClose, onSave, onDelete, truck
               <option value="own">Own Truck</option>
               <option value="other">Other Truck</option>
               <option value="guest">Guest Truck</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1">Assigned Driver</label>
+            <select
+              value={form.assignedDriverId}
+              onChange={(e) => setForm((prev) => ({ ...prev, assignedDriverId: e.target.value }))}
+              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            >
+              <option value="">Unassigned</option>
+              {drivers.map((driver) => (
+                <option key={driver.id} value={driver.id}>
+                  {driver.fullName || driver.name}
+                </option>
+              ))}
             </select>
           </div>
 

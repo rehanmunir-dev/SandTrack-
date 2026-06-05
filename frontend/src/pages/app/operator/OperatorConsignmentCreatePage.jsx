@@ -134,12 +134,6 @@ export default function OperatorConsignmentCreatePage() {
         {error ? <p className="mt-3 rounded-lg border border-error bg-error-container px-3 py-2 text-sm text-on-error-container">{error}</p> : null}
       </SectionCard>
 
-      {assignableDrivers.length === 0 || assignableTrucks.length === 0 ? (
-        <SectionCard title="Driver or Truck Needed" subtitle="Add at least one driver and one truck before creating a consignment.">
-          <p className="text-sm text-on-surface-variant">Only CEO-approved, active, and currently free drivers and trucks can be assigned to consignments.</p>
-        </SectionCard>
-      ) : null}
-
       {created ? (
         <SectionCard title="Created Consignment" subtitle="Copy the QR and use it at gate scan">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
