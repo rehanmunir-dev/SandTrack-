@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import SectionCard from '../../../components/common/SectionCard'
 import StatusBadge from '../../../components/common/StatusBadge'
+import OperatorQrPassActions from '../../../components/operator/OperatorQrPassActions'
 import { useRoleSystem } from '../../../context/roleSystem/RoleSystemContext'
 import { CONSIGNMENT_STATUS, DRIVER_STATUS, TRUCK_STATUS } from '../../../constants/roleSystemStatus'
 
@@ -73,6 +74,7 @@ export default function OperatorConsignmentCreatePage() {
         driverPhone: driverSnapshot?.phone || 'N/A',
         truckVehicleNo: truckSnapshot?.vehicleNo || 'N/A',
         truckType: truckSnapshot?.type || 'N/A',
+        materialType: form.notes || 'Sand Load',
         ...form,
       })
       setForm({ driverId: '', truckId: '', netWeight: '', destination: TERMINALS[1], originTerminal: TERMINALS[0], notes: '', price: '', discount: '' })
@@ -135,12 +137,19 @@ export default function OperatorConsignmentCreatePage() {
       </SectionCard>
 
       {created ? (
-        <SectionCard title="Created Consignment" subtitle="Copy the QR and use it at gate scan">
+        <SectionCard title="Created Consignment" subtitle="Share, print, or scan this secure QR pass">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Driver QR Pass</p>
+              <p className="text-sm text-on-surface-variant">Send the pass to WhatsApp or print a high-quality gate copy.</p>
+            </div>
+            <OperatorQrPassActions pass={created} />
+          </div>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="rounded-xl border border-outline-variant/15 bg-surface-container-lowest p-4 text-center lg:col-span-1">
               <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">QR Code</p>
               <div className="mx-auto mt-4 inline-flex rounded-2xl bg-white p-3 shadow-sm">
-                <QRCodeSVG value={created.qrCode} size={180} level="M" includeMargin />
+                <QRCodeSVG value={`${window.location.origin}/public/qr-pass/${created.qrCode}`} size={220} level="H" includeMargin />
               </div>
               <p className="mt-3 break-all text-[11px] font-semibold text-on-surface-variant">{created.qrCode}</p>
               <p className="mt-2 text-xs text-on-surface-variant">Consignment: {created.consignmentId}</p>

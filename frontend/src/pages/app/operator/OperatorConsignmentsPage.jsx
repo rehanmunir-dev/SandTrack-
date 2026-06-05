@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import SectionCard from '../../../components/common/SectionCard'
 import StatusBadge from '../../../components/common/StatusBadge'
+import OperatorQrPassActions from '../../../components/operator/OperatorQrPassActions'
 import { useRoleSystem } from '../../../context/roleSystem/RoleSystemContext'
 import { CONSIGNMENT_STATUS, DRIVER_STATUS, TRUCK_STATUS } from '../../../constants/roleSystemStatus'
 
@@ -46,6 +47,21 @@ export default function OperatorConsignmentsPage() {
   const approvedDrivers = drivers.filter((driver) => driver.approvalStatus === 'approved' && driver.status === DRIVER_STATUS.ACTIVE && !busyDriverIds.has(String(driver.id)))
   const approvedTrucks = trucks.filter((truck) => truck.approvalStatus === 'approved' && truck.status === TRUCK_STATUS.ACTIVE && !busyTruckIds.has(String(truck.id)))
 
+  function buildQrPass(item) {
+    const driver = drivers.find((candidate) => candidate.id === item.driverId)
+    const truck = trucks.find((candidate) => candidate.id === item.truckId)
+    return {
+      ...item,
+      driverName: driver?.name || item.driverName || 'N/A',
+      driverPhone: driver?.phone || 'N/A',
+      truckVehicleNo: truck?.vehicleNo || item.truckRegistration || 'N/A',
+      truckType: truck?.type || 'N/A',
+      netWeight: item.netWeight,
+      materialType: item.materialType || 'Sand Load',
+      originTerminal: item.originTerminal,
+    }
+  }
+
   return (
     <div className="space-y-6">
       <SectionCard title="Operator Consignments" subtitle="All created records and QR assignments">
@@ -80,20 +96,7 @@ export default function OperatorConsignmentsPage() {
                   <td className="px-4 py-3"><StatusBadge status={item.status} /></td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
-                      <button 
-                        onClick={() => {
-                          if (!item.qrCode) {
-                            alert('QR has not been generated for this consignment yet.')
-                            return
-                          }
-                          const link = `${window.location.origin}/public/qr-pass/${item.qrCode}`
-                          navigator.clipboard.writeText(link)
-                          alert(`Public QR pass copied to clipboard:\n${link}\n\nExpires: ${item.qrExpiresAt ? new Date(item.qrExpiresAt).toLocaleString() : 'N/A'}`)
-                        }}
-                        className="rounded border border-primary px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary hover:text-white"
-                      >
-                        Copy QR Link
-                      </button>
+                      <OperatorQrPassActions pass={buildQrPass(item)} compact />
                       {!item.isFlagged && (
                         <button 
                           onClick={() => setFlagModalConsignment(item)}
