@@ -9,6 +9,7 @@ export default function OperatorDriversPage() {
   const [form, setForm] = useState({ name: '', phone: '', cnic: '', status: DRIVER_STATUS.ACTIVE, assignedTruckId: '' })
   const [editId, setEditId] = useState('')
   const [showModal, setShowModal] = useState(false)
+  const [notice, setNotice] = useState('')
   
   const [credModal, setCredModal] = useState({
     isOpen: false,
@@ -31,12 +32,29 @@ export default function OperatorDriversPage() {
 
   async function submitDriver(event) {
     event.preventDefault()
-    if (editId) {
-      await updateDriver(editId, { ...form, assignedTruckId: form.assignedTruckId || null })
-      reset()
-      setShowModal(false)
-    } else {
-      const result = await createDriver({ ...form, assignedTruckId: form.assignedTruckId || null })
+    setNotice('')
+
+    if (!form.name.trim() || !form.cnic.trim()) {
+      setNotice('Driver name and CNIC are required.')
+      return
+    }
+
+    try {
+      if (editId) {
+        await updateDriver(editId, { ...form, assignedTruckId: form.assignedTruckId || null })
+        reset()
+        setShowModal(false)
+        setNotice('Driver updated successfully.')
+        return
+      }
+
+      const result = await createDriver({
+        ...form,
+        name: form.name.trim(),
+        cnic: form.cnic.trim(),
+        phone: form.phone.trim(),
+        assignedTruckId: form.assignedTruckId || null
+      })
       reset()
       setShowModal(false)
       if (result && result.loginCredentials) {
@@ -49,6 +67,9 @@ export default function OperatorDriversPage() {
           extraInfo: 'Pending Admin Approval'
         })
       }
+      setNotice('Driver added successfully and sent to CEO approvals.')
+    } catch (error) {
+      setNotice(error.response?.data?.message || 'Driver could not be added. Please check the details and try again.')
     }
   }
 
@@ -122,7 +143,7 @@ export default function OperatorDriversPage() {
               <form onSubmit={submitDriver} className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
                 <input name="name" value={form.name} onChange={handleChange} placeholder="Driver name" className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm" />
                 <input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm" />
-                <input name="cnic" value={form.cnic} onChange={handleChange} placeholder="CNIC (optional)" className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm" />
+                <input name="cnic" value={form.cnic} onChange={handleChange} placeholder="CNIC (required)" className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm" />
                 <select name="status" value={form.status} onChange={handleChange} className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm">
                   <option value={DRIVER_STATUS.ACTIVE}>Active</option>
                   <option value={DRIVER_STATUS.INACTIVE}>Inactive</option>
@@ -149,6 +170,7 @@ export default function OperatorDriversPage() {
           extraInfo={credModal.cnic ? `CNIC: ${credModal.cnic} | Status: ${credModal.extraInfo}` : credModal.extraInfo}
           onClose={() => setCredModal((prev) => ({ ...prev, isOpen: false }))}
         />
+        {notice ? <p className="text-xs font-semibold text-primary">{notice}</p> : null}
       </SectionCard>
     </div>
   )

@@ -453,11 +453,27 @@ export function OwnerProvider({ children }) {
     setSelectedTerminalId((prev) => (prev === terminalId ? null : prev))
   }
 
-  function addDriverProfile(payload) {
+  async function addDriverProfile(payload) {
+    const body = new FormData()
+    body.append('fullName', payload.fullName || payload.name || '')
+    body.append('phone', payload.phone || '')
+    body.append('cnic', payload.cnic || '')
+    body.append('licenseNumber', payload.licenseNo || payload.licenseNumber || `LIC-${String(Date.now()).slice(-6)}`)
+
+    const res = await api.post('/drivers', body, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    const driver = res.data?.data || res.data || {}
     const profile = {
-      id: `drv-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      ...payload,
+      ...mapBackendDriverToOwner({
+        ...driver,
+        full_name: driver.fullName,
+        license_number: driver.licenseNumber,
+        created_at: driver.createdAt,
+      }),
+      assignedTruckId: payload.assignedTruckId || null,
+      assignedTerminalId: payload.assignedTerminalId || 't-hazro-main',
+      loginCredentials: driver.loginCredentials,
     }
 
     setDriverProfiles((prev) => [profile, ...prev])
@@ -477,14 +493,18 @@ export function OwnerProvider({ children }) {
     return profile
   }
 
-  function addTruck(payload) {
+  async function addTruck(payload) {
+    const res = await api.post('/trucks', {
+      registrationNumber: payload.vehicleNo || payload.registrationNumber || '',
+      vehicleType: payload.type || payload.vehicleType || 'Damper',
+      wheelCount: Number(payload.wheelCount || payload.wheels || 6),
+      ownerName: payload.ownershipType || payload.ownerName || 'own'
+    })
     const truck = {
-      id: `trk-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      lastSeenAt: new Date().toISOString(),
+      ...mapBackendTruckToOwner(res.data?.data || res.data || {}),
+      ownershipType: payload.ownershipType || payload.ownerName || 'own',
       driverName: null,
       driverProfileId: null,
-      ...payload,
     }
 
     setTrucks((prev) => [truck, ...prev])

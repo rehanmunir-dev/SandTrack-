@@ -5,6 +5,7 @@ import EmptyState from '../../components/owner/EmptyState'
 import TruckEditModal from '../../components/modals/TruckEditModal'
 import DriverEditModal from '../../components/modals/DriverEditModal'
 import TruckCreateModal from '../../components/modals/TruckCreateModal'
+import CredentialCard from '../../components/CredentialCard'
 import { useOwnerData } from '../../context/owner/OwnerContext'
 import { isInDateRange } from '../../utils/dateRange'
 
@@ -22,6 +23,14 @@ export default function OwnerTrucksPage() {
   const [isDriverEditModalOpen, setIsDriverEditModalOpen] = useState(false)
   const [selectedTruckForEdit, setSelectedTruckForEdit] = useState(null)
   const [selectedDriverForEdit, setSelectedDriverForEdit] = useState(null)
+  const [credModal, setCredModal] = useState({
+    isOpen: false,
+    name: '',
+    cnic: '',
+    username: '',
+    password: '',
+    extraInfo: '',
+  })
   
   const [driverForm, setDriverForm] = useState({
     fullName: '',
@@ -85,35 +94,50 @@ export default function OwnerTrucksPage() {
     setIsDriverEditModalOpen(true)
   }
 
-  function handleCreateDriverProfile(event) {
+  async function handleCreateDriverProfile(event) {
     event.preventDefault()
 
-    if (!driverForm.fullName.trim() || !driverForm.phone.trim() || !driverForm.assignedTruckId) {
-      setNotice('Driver name, phone, and truck are required.')
+    if (!driverForm.fullName.trim() || !driverForm.phone.trim() || !driverForm.cnic.trim() || !driverForm.assignedTruckId) {
+      setNotice('Driver name, phone, CNIC, and truck are required.')
       return
     }
 
     const selectedTruckForDriver = trucks.find((truck) => truck.id === driverForm.assignedTruckId)
-    const created = addDriverProfile({
-      ...driverForm,
-      fullName: driverForm.fullName.trim(),
-      phone: driverForm.phone.trim(),
-      cnic: driverForm.cnic.trim(),
-      licenseNo: driverForm.licenseNo.trim(),
-      notes: driverForm.notes.trim(),
-      assignedTerminalId: selectedTruckForDriver?.assignedTerminalId || null,
-    })
+    try {
+      const created = await addDriverProfile({
+        ...driverForm,
+        fullName: driverForm.fullName.trim(),
+        phone: driverForm.phone.trim(),
+        cnic: driverForm.cnic.trim(),
+        licenseNo: driverForm.licenseNo.trim(),
+        notes: driverForm.notes.trim(),
+        assignedTerminalId: selectedTruckForDriver?.assignedTerminalId || null,
+      })
 
-    setDriverForm({
-      fullName: '',
-      phone: '',
-      cnic: '',
-      licenseNo: '',
-      assignedTruckId: trucks[0]?.id || '',
-      notes: '',
-    })
-    setIsCreateDriverModalOpen(false)
-    setNotice('Driver profile created successfully.')
+      if (created?.loginCredentials) {
+        setCredModal({
+          isOpen: true,
+          name: created.fullName || driverForm.fullName,
+          cnic: created.cnic || driverForm.cnic,
+          username: created.loginCredentials.username,
+          password: created.loginCredentials.plainPassword,
+          extraInfo: 'Pending Admin Approval',
+        })
+      }
+
+      setDriverForm({
+        fullName: '',
+        phone: '',
+        cnic: '',
+        licenseNo: '',
+        assignedTruckId: trucks[0]?.id || '',
+        notes: '',
+      })
+      setIsCreateDriverModalOpen(false)
+      setNotice('Driver profile created successfully and sent to approvals.')
+    } catch (error) {
+      setNotice(error.response?.data?.message || 'Driver profile could not be created.')
+    }
   }
 
   function handleSaveTruck(updatedData) {
@@ -127,10 +151,14 @@ export default function OwnerTrucksPage() {
     setNotice('Truck details updated successfully.')
   }
 
-  function handleCreateTruck(truckData) {
-    addTruck(truckData)
-    setIsCreateTruckModalOpen(false)
-    setNotice('Truck created successfully.')
+  async function handleCreateTruck(truckData) {
+    try {
+      await addTruck(truckData)
+      setIsCreateTruckModalOpen(false)
+      setNotice('Truck created successfully and sent to approvals.')
+    } catch (error) {
+      setNotice(error.response?.data?.message || 'Truck could not be created.')
+    }
   }
 
   function handleSaveDriverProfile(updatedData) {
@@ -408,6 +436,7 @@ export default function OwnerTrucksPage() {
               <div>
                 <label className="block text-xs font-semibold text-on-surface-variant mb-1">CNIC</label>
                 <input
+                  required
                   value={driverForm.cnic}
                   onChange={(e) => setDriverForm((prev) => ({ ...prev, cnic: e.target.value }))}
                   className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm focus:border-primary focus:outline-none"
@@ -465,6 +494,15 @@ export default function OwnerTrucksPage() {
       ) : null}
 
       {notice ? <p className="text-xs font-medium text-primary">{notice}</p> : null}
+      <CredentialCard
+        isOpen={credModal.isOpen}
+        name={credModal.name}
+        role="DRIVER"
+        username={credModal.username}
+        password={credModal.password}
+        extraInfo={credModal.cnic ? `CNIC: ${credModal.cnic} | Status: ${credModal.extraInfo}` : credModal.extraInfo}
+        onClose={() => setCredModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   )
 }

@@ -58,6 +58,7 @@ export async function registerDriver(req, res, next) {
     } = req.body
 
     if (!fullName || !cnic) {
+      await client.query('ROLLBACK')
       return res.status(400).json({
         success: false,
         message: 'Full name and CNIC are required'
