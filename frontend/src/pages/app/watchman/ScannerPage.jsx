@@ -171,19 +171,34 @@ export default function ScannerPage() {
     setIsPending(true)
     try {
       const reason = flagReason.trim()
-      if (flagTarget === 'driver') {
-        await flagDriver(result.driver?.id || result.consignment?.driverId, reason)
-      } else if (flagTarget === 'truck') {
-        await flagTruck(result.truck?.id || result.consignment?.truckId, reason)
-      } else {
-        await flagConsignment(result.consignment.id, reason)
+      const targetId = flagTarget === 'driver'
+        ? result?.driver?.id || result?.consignment?.driverId
+        : flagTarget === 'truck'
+          ? result?.truck?.id || result?.consignment?.truckId
+          : result?.consignment?.id
+
+      if (!targetId) {
+        throw new Error(`The scanned pass does not contain a valid ${flagTarget} ID.`)
       }
 
-      toast.success('Issue flagged and sent to management.')
+      if (flagTarget === 'driver') {
+        await flagDriver(targetId, reason)
+      } else if (flagTarget === 'truck') {
+        await flagTruck(targetId, reason)
+      } else {
+        await flagConsignment(targetId, reason)
+      }
+
+      setResult((previous) => ({
+        ...previous,
+        flaggedTargets: [...new Set([...(previous?.flaggedTargets || []), flagTarget])],
+        lastFlagReason: reason,
+      }))
+      toast.success(`${flagTarget[0].toUpperCase()}${flagTarget.slice(1)} flagged. Operator and CEO have been notified.`)
       setFlagTarget(null)
       setFlagReason('')
     } catch (err) {
-      const msg = err.response?.data?.message || 'Unable to flag this issue.'
+      const msg = err.response?.data?.message || err.message || 'Unable to flag this issue.'
       toast.error(msg)
     } finally {
       setIsPending(false)
@@ -334,6 +349,14 @@ export default function ScannerPage() {
                 </div>
 
                 <div className="pt-2">
+                  {result.flaggedTargets?.length ? (
+                    <div className="mb-3 rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                      <p className="font-extrabold">Flag submitted to management</p>
+                      <p className="mt-1 text-xs text-amber-200/80">
+                        Flagged: {result.flaggedTargets.join(', ')}. Reason: {result.lastFlagReason}
+                      </p>
+                    </div>
+                  ) : null}
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <button
                       data-testid="clear-gate-btn"
@@ -347,19 +370,19 @@ export default function ScannerPage() {
                     <button
                       type="button"
                       onClick={() => setFlagTarget('consignment')}
-                      disabled={isPending}
+                      disabled={isPending || result.flaggedTargets?.includes('consignment')}
                       className="py-4 rounded-2xl border border-amber-400/40 bg-amber-500/10 text-amber-200 font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:bg-amber-500/20 transition-all disabled:opacity-50"
                     >
                       <span className="material-symbols-outlined text-2xl">flag</span>
-                      FLAG ISSUE
+                      {result.flaggedTargets?.includes('consignment') ? 'CONSIGNMENT FLAGGED' : 'FLAG ISSUE'}
                     </button>
                   </div>
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <button type="button" onClick={() => setFlagTarget('driver')} className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700">
-                      Flag Driver
+                    <button type="button" disabled={isPending || result.flaggedTargets?.includes('driver')} onClick={() => setFlagTarget('driver')} className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
+                      {result.flaggedTargets?.includes('driver') ? 'Driver Flagged' : 'Flag Driver'}
                     </button>
-                    <button type="button" onClick={() => setFlagTarget('truck')} className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700">
-                      Flag Truck
+                    <button type="button" disabled={isPending || result.flaggedTargets?.includes('truck')} onClick={() => setFlagTarget('truck')} className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
+                      {result.flaggedTargets?.includes('truck') ? 'Truck Flagged' : 'Flag Truck'}
                     </button>
                   </div>
                 </div>

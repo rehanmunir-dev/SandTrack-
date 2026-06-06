@@ -5,6 +5,7 @@ import { useOwnerData } from '../../context/owner/OwnerContext'
 import { useAuth } from '../../context/AuthContext'
 import { ROLE_LABELS } from '../../rbac/roles'
 import SearchBar from './SearchBar'
+import NotificationBell from '../NotificationBell'
 
 function isActive(pathname, itemPath) {
   return pathname === itemPath || pathname.startsWith(`${itemPath}/`)
@@ -169,6 +170,7 @@ export default function OwnerLayout() {
                   >
                     Search
                   </button>
+                  <NotificationBell owner />
                   <button
                     type="button"
                     onClick={() => navigate(OWNER_ROUTES.PROFILE)}

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { PERMISSIONS } from '../../rbac/permissions'
 import { ROLE_LABELS, ROLES } from '../../rbac/roles'
+import NotificationBell from '../NotificationBell'
 
 const ROLE_MENUS = {
   [ROLES.TERMINAL_OPERATOR]: [
@@ -286,11 +287,12 @@ export default function AppLayout() {
                 </div>
               </div>
 
-              <div className="hidden items-center gap-2 sm:flex sm:gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <NotificationBell />
                 <button
                   type="button"
                   onClick={() => navigate('/app/profile')}
-                  className="flex items-center gap-2 sm:gap-3 rounded-full border border-outline-variant/20 bg-surface-container-low px-2 sm:px-3 py-2 transition-colors hover:bg-surface-container"
+                  className="hidden items-center gap-2 rounded-full border border-outline-variant/20 bg-surface-container-low px-2 py-2 transition-colors hover:bg-surface-container sm:flex sm:gap-3 sm:px-3"
                   aria-label="Open profile"
                 >
                   <div className="flex h-8 sm:h-10 w-8 sm:w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs sm:text-sm font-bold text-on-primary">

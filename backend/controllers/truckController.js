@@ -1,4 +1,5 @@
 import pool from '../db/pool.js'
+import { logActivity } from '../services/activityService.js'
 
 export async function getTrucks(req, res, next) {
   try {
@@ -235,12 +236,14 @@ export async function flagTruck(req, res, next) {
       return res.status(404).json({ success: false, message: 'Truck not found' })
     }
 
-    req.activityLog = {
-      action: 'TRUCK_FLAGGED',
-      entityType: 'truck',
-      entityId: parseInt(id, 10),
-      metadata: { reason, flaggedBy: req.user.id }
-    }
+    await logActivity(
+      req.user.id,
+      req.user.role,
+      'TRUCK_FLAGGED',
+      'truck',
+      parseInt(id, 10),
+      { reason }
+    )
 
     return res.status(200).json({ success: true, data: rows[0], message: 'Truck flagged successfully' })
   } catch (error) {

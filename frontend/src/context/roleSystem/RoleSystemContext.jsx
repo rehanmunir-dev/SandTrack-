@@ -166,10 +166,13 @@ function normalizeLog(l) {
   return {
     id: l.id,
     timestamp: l.created_at || l.timestamp || new Date().toISOString(),
-    actor: l.actor || 'System',
-    role: l.role || 'operator',
+    actor: l.actor_name || l.actor || 'System',
+    role: l.actor_role || l.role || 'operator',
     action: l.action || 'Event',
-    details: l.details || '',
+    details: l.details || l.metadata?.reason || '',
+    entityType: l.entity_type || l.entityType || null,
+    entityId: l.entity_id || l.entityId || null,
+    metadata: l.metadata || {},
   }
 }
 
@@ -207,7 +210,9 @@ export function RoleSystemProvider({ children }) {
     fetchTrucks()
     fetchConsignments()
     fetchPayments()
-    fetchActivityLogs()
+    if (currentUser.role === 'SUPER_ADMIN') {
+      fetchActivityLogs()
+    }
     fetchScans()
     fetchExpenses()
     fetchLedgerEntries()
@@ -223,6 +228,9 @@ export function RoleSystemProvider({ children }) {
       fetchPayments()
       fetchScans()
       fetchLedgerEntries()
+      if (currentUser.role === 'SUPER_ADMIN') {
+        fetchActivityLogs()
+      }
     }, 25000)
 
     return () => clearInterval(interval)
@@ -294,6 +302,9 @@ export function RoleSystemProvider({ children }) {
   }
 
   const fetchActivityLogs = async () => {
+    if (currentUser?.role !== 'SUPER_ADMIN') {
+      return
+    }
     const token = localStorage.getItem('sandtrack_token')
     if (!token) {
       return
@@ -589,21 +600,27 @@ export function RoleSystemProvider({ children }) {
   }
 
   const flagConsignment = async (consignmentId, reason) => {
-    await flagConsignmentAPI(consignmentId, reason)
+    const response = await flagConsignmentAPI(consignmentId, reason)
     await fetchConsignments()
-    await fetchActivityLogs()
+    if (currentUser?.role === 'SUPER_ADMIN') await fetchActivityLogs()
+    window.dispatchEvent(new Event('sandtrack:notifications-refresh'))
+    return response.data?.data || response.data
   }
 
   const flagDriver = async (driverId, reason) => {
-    await flagDriverAPI(driverId, reason)
+    const response = await flagDriverAPI(driverId, reason)
     await fetchDrivers()
-    await fetchActivityLogs()
+    if (currentUser?.role === 'SUPER_ADMIN') await fetchActivityLogs()
+    window.dispatchEvent(new Event('sandtrack:notifications-refresh'))
+    return response.data?.data || response.data
   }
 
   const flagTruck = async (truckId, reason) => {
-    await flagTruckAPI(truckId, reason)
+    const response = await flagTruckAPI(truckId, reason)
     await fetchTrucks()
-    await fetchActivityLogs()
+    if (currentUser?.role === 'SUPER_ADMIN') await fetchActivityLogs()
+    window.dispatchEvent(new Event('sandtrack:notifications-refresh'))
+    return response.data?.data || response.data
   }
 
   const updatePaymentDetails = async (paymentId, patch) => {

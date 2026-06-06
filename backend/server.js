@@ -22,6 +22,7 @@ import gateLogRoutes from './routes/gateLogs.js'
 import activityLogRoutes from './routes/activityLogs.js'
 import analyticsRoutes from './routes/analytics.js'
 import ledgerRoutes from './routes/ledger.js'
+import notificationRoutes from './routes/notifications.js'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -78,6 +79,7 @@ app.use('/api/gate-logs', gateLogRoutes)
 app.use('/api/activity-logs', activityLogRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/ledger', ledgerRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 // Fallback Route Handler
 app.use((req, res) => {

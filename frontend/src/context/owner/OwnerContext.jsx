@@ -142,6 +142,34 @@ function buildPercentSeries(values) {
   return values.map((value) => Math.max(8, Math.round((value / max) * 100)))
 }
 
+function mapNotificationToOwnerAlert(notification) {
+  const titleMap = {
+    DRIVER_FLAGGED: 'Driver security flag',
+    TRUCK_FLAGGED: 'Truck security flag',
+    CONSIGNMENT_FLAGGED: 'Consignment security flag',
+    PAYMENT_FLAGGED: 'Payment security flag',
+  }
+
+  if (!titleMap[notification.action]) {
+    return null
+  }
+
+  const reason = notification.metadata?.reason || 'A suspicious issue was reported and requires review.'
+  return {
+    id: `activity-${notification.id}`,
+    title: titleMap[notification.action],
+    message: `${notification.entityLabel || 'Record'}: ${reason}`,
+    severity: 'critical',
+    isRead: false,
+    reviewState: ALERT_REVIEW_STATE.NEW,
+    createdAt: notification.createdAt,
+    entityType: notification.entityType,
+    entityId: notification.entityId,
+    reportedBy: notification.actorName,
+    actions: [],
+  }
+}
+
 export function OwnerProvider({ children }) {
   const { session } = useAuth()
   const [users, setUsers] = useState([])
@@ -174,12 +202,13 @@ export function OwnerProvider({ children }) {
 
     async function loadAllRemoteData() {
       try {
-        const [usersRes, consRes, trucksRes, driversRes, paymentsRes] = await Promise.all([
+        const [usersRes, consRes, trucksRes, driversRes, paymentsRes, notificationsRes] = await Promise.all([
           api.get('/users'),
           api.get('/consignments'),
           api.get('/trucks'),
           api.get('/drivers'),
-          api.get('/payments')
+          api.get('/payments'),
+          api.get('/notifications', { params: { limit: 50 } })
         ])
 
         const usersData = usersRes.data?.data || usersRes.data || []
@@ -244,6 +273,22 @@ export function OwnerProvider({ children }) {
             )
           ))
         }
+
+        const notificationData = notificationsRes.data?.data || []
+        const incomingAlerts = Array.isArray(notificationData)
+          ? notificationData.map(mapNotificationToOwnerAlert).filter(Boolean)
+          : []
+        setAlerts((previous) => incomingAlerts.map((incoming) => {
+          const existing = previous.find((alert) => alert.id === incoming.id)
+          return existing
+            ? {
+                ...incoming,
+                isRead: existing.isRead,
+                reviewState: existing.reviewState,
+                actions: existing.actions || [],
+              }
+            : incoming
+        }))
       } catch (err) {
         console.error('Failed to load owner remote data:', err)
       }

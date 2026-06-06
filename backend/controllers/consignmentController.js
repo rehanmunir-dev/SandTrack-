@@ -1,5 +1,6 @@
 import pool from '../db/pool.js'
 import { generateQrToken, generateQrImage } from '../services/qrService.js'
+import { logActivity } from '../services/activityService.js'
 
 export async function getConsignments(req, res, next) {
   const { id: userId, role } = req.user
@@ -564,12 +565,14 @@ export async function flagConsignment(req, res, next) {
       return res.status(404).json({ success: false, message: 'Consignment not found' })
     }
 
-    req.activityLog = {
-      action: 'CONSIGNMENT_FLAGGED',
-      entityType: 'consignment',
-      entityId: parseInt(id, 10),
-      metadata: { reason }
-    }
+    await logActivity(
+      req.user.id,
+      req.user.role,
+      'CONSIGNMENT_FLAGGED',
+      'consignment',
+      parseInt(id, 10),
+      { reason }
+    )
 
     return res.status(200).json({ success: true, data: rows[0], message: 'Consignment flagged successfully' })
   } catch (error) {

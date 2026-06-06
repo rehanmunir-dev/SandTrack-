@@ -173,6 +173,9 @@ export const getGateLogsAPI = () =>
 export const getActivityLogsAPI = (params) =>
   api.get('/activity-logs', { params })
 
+export const getNotificationsAPI = (params = {}) =>
+  api.get('/notifications', { params })
+
 // Analytics Domain API functions
 export const getAnalyticsSummaryAPI = () =>
   api.get('/analytics/summary')

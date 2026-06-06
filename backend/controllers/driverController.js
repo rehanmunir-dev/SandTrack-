@@ -1,5 +1,6 @@
 import pool from '../db/pool.js'
 import { hashPassword as hashPasswordAuth } from '../services/authService.js'
+import { logActivity } from '../services/activityService.js'
 import {
   generateUsername,
   ensureUniqueUsername,
@@ -342,12 +343,14 @@ export async function flagDriver(req, res, next) {
       return res.status(404).json({ success: false, message: 'Driver not found' })
     }
 
-    req.activityLog = {
-      action: 'DRIVER_FLAGGED',
-      entityType: 'driver',
-      entityId: parseInt(id, 10),
-      metadata: { reason, flaggedBy: req.user.id }
-    }
+    await logActivity(
+      req.user.id,
+      req.user.role,
+      'DRIVER_FLAGGED',
+      'driver',
+      parseInt(id, 10),
+      { reason }
+    )
 
     return res.status(200).json({ success: true, data: rows[0], message: 'Driver flagged successfully' })
   } catch (error) {
