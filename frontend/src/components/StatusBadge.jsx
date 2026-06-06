@@ -23,7 +23,7 @@ const BADGE_MAP = {
     label: '⏳ Pending',
   },
   IN_TRANSIT: {
-    classes: 'bg-info-container text-info border-info/20',
+    classes: 'border-blue-200 bg-blue-50 text-blue-800',
     label: '🚛 In Transit',
   },
   ARRIVED: {
@@ -35,7 +35,7 @@ const BADGE_MAP = {
     label: 'Delivery Review',
   },
   on_way: {
-    classes: 'bg-info-container text-info border-info/20',
+    classes: 'border-blue-200 bg-blue-50 text-blue-800',
     label: '🚛 In Transit',
   },
   GATE_CLEARED: {
@@ -47,11 +47,11 @@ const BADGE_MAP = {
     label: '🔓 Gate Cleared',
   },
   DELIVERED: {
-    classes: 'bg-tertiary-container text-tertiary border-tertiary/20',
+    classes: 'border-emerald-700 bg-emerald-700 text-white',
     label: '✅ Delivered',
   },
   delivered: {
-    classes: 'bg-tertiary-container text-tertiary border-tertiary/20',
+    classes: 'border-emerald-700 bg-emerald-700 text-white',
     label: '✅ Delivered',
   },
   BILLED: {
@@ -73,15 +73,15 @@ const BADGE_MAP = {
 
   // Payment statuses
   PAID: {
-    classes: 'bg-tertiary-container text-tertiary border-tertiary/20',
+    classes: 'border-emerald-700 bg-emerald-700 text-white',
     label: '✅ Paid',
   },
   paid: {
-    classes: 'bg-tertiary-container text-tertiary border-tertiary/20',
+    classes: 'border-emerald-700 bg-emerald-700 text-white',
     label: '✅ Paid',
   },
   pending: {
-    classes: 'bg-surface-container-high text-on-surface-variant border-outline-variant/30',
+    classes: 'border-amber-200 bg-amber-50 text-amber-800',
     label: '⏳ Pending',
   },
   held: {

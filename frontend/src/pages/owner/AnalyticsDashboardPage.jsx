@@ -455,35 +455,35 @@ export default function AnalyticsDashboardPage() {
           />
         ) : (
           <div className="space-y-4">
-            <div className="app-table-scroll rounded-2xl border border-outline-variant/15">
+            <div className="app-table-scroll overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
               <table className="app-table border-collapse text-left">
-                <thead className="bg-surface-container-high text-on-surface-variant uppercase text-xs font-bold border-b border-outline-variant/15">
+                <thead className="border-b border-blue-950 bg-blue-950 text-xs font-bold uppercase text-white">
                   <tr>
-                    <th className="px-4 py-3">ID</th>
-                    <th className="px-4 py-3">Driver</th>
-                    <th className="px-4 py-3">Truck</th>
-                    <th className="px-4 py-3">Weight</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3">Payment</th>
+                    <th className="px-5 py-4">ID</th>
+                    <th className="px-5 py-4">Driver</th>
+                    <th className="px-5 py-4">Truck</th>
+                    <th className="px-5 py-4">Weight</th>
+                    <th className="px-5 py-4">Status</th>
+                    <th className="px-5 py-4">Date</th>
+                    <th className="px-5 py-4">Payment</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-outline-variant/10 text-sm">
+                <tbody className="divide-y divide-slate-200 text-sm">
                   {paginatedConsignments.map((c) => (
                     <tr 
                       key={c.id} 
                       onClick={() => setSelectedConsignmentForModal(c)}
-                      className="hover:bg-surface-container-lowest transition-colors cursor-pointer"
+                      className="cursor-pointer transition-colors odd:bg-white even:bg-slate-50 hover:bg-blue-50"
                     >
-                      <td className="px-4 py-3 font-semibold text-primary">{c.consignmentId}</td>
-                      <td className="px-4 py-3 font-medium text-on-surface-variant">{c.driverName || getDriverName(c.driverId)}</td>
-                      <td className="px-4 py-3 text-on-surface-variant font-mono text-xs">{c.truckRegistration || getTruckReg(c.truckId)}</td>
-                      <td className="px-4 py-3 text-on-surface-variant">{c.netWeight} Tons</td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4 font-bold text-blue-950">{c.consignmentId}</td>
+                      <td className="px-5 py-4 font-semibold text-slate-800">{c.driverName || getDriverName(c.driverId)}</td>
+                      <td className="px-5 py-4 font-mono text-xs font-semibold text-slate-700">{c.truckRegistration || getTruckReg(c.truckId)}</td>
+                      <td className="px-5 py-4 font-medium text-slate-700">{c.netWeight} Tons</td>
+                      <td className="px-5 py-4">
                         <StatusBadge status={c.status} size="sm" />
                       </td>
-                      <td className="px-4 py-3 text-on-surface-variant">{formatDate(c.createdAt)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4 font-medium text-slate-700">{formatDate(c.createdAt)}</td>
+                      <td className="px-5 py-4">
                         <StatusBadge status={getPaymentStatus(c.id)} size="sm" />
                       </td>
                     </tr>
