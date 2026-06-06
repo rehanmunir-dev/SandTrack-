@@ -152,7 +152,7 @@ export async function createConsignment(req, res, next) {
       SELECT id, consignment_number, status
       FROM consignments
       WHERE driver_id = $1
-        AND status IN ('SCAN_PENDING', 'IN_TRANSIT', 'ARRIVED', 'DELIVERY_PENDING_VERIFICATION', 'DELIVERED')
+        AND status IN ('SCAN_PENDING', 'IN_TRANSIT', 'ARRIVED', 'DELIVERY_PENDING_VERIFICATION')
       ORDER BY id DESC
       LIMIT 1
     `, [driverId])
@@ -178,7 +178,7 @@ export async function createConsignment(req, res, next) {
       SELECT id, consignment_number, status
       FROM consignments
       WHERE truck_id = $1
-        AND status IN ('SCAN_PENDING', 'IN_TRANSIT', 'ARRIVED', 'DELIVERY_PENDING_VERIFICATION', 'DELIVERED')
+        AND status IN ('SCAN_PENDING', 'IN_TRANSIT', 'ARRIVED', 'DELIVERY_PENDING_VERIFICATION')
       ORDER BY id DESC
       LIMIT 1
     `, [truckId])
