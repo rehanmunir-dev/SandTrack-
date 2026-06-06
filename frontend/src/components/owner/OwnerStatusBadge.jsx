@@ -9,7 +9,7 @@ export default function OwnerStatusBadge({ status }) {
   const toneClass = STATUS_BADGE_CLASS[status] || 'bg-surface-container-highest text-on-surface-variant'
 
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${toneClass}`}>
+    <span className={`inline-flex items-center whitespace-nowrap rounded-full border border-current/10 px-2.5 py-1 text-[11px] font-extrabold uppercase ${toneClass}`}>
       {label}
     </span>
   )

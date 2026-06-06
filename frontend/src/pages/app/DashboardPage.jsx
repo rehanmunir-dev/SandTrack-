@@ -100,7 +100,7 @@ export default function DashboardPage() {
           value={counters.activeConsignments}
           colorClass="text-primary"
           extra={
-            <span className="rounded bg-tertiary-fixed px-2 py-0.5 text-xs font-bold text-on-tertiary-container">
+            <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-800">
               Live
             </span>
           }
@@ -120,8 +120,8 @@ export default function DashboardPage() {
         <MetricCard
           label="Delivered"
           value={deliveredCount}
-          colorClass="text-on-tertiary-container"
-          extra={<span className="material-symbols-outlined text-on-tertiary-container">check_circle</span>}
+          colorClass="text-emerald-700"
+          extra={<span className="material-symbols-outlined text-emerald-700">check_circle</span>}
         />
 
         <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-primary-container p-6 lg:col-span-2">

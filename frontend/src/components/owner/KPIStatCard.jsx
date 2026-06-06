@@ -5,18 +5,19 @@ export default function KPIStatCard({ title, value, helper, onClick, tone = 'def
       : tone === 'secondary'
         ? 'text-secondary'
         : tone === 'success'
-          ? 'text-on-tertiary-container'
+          ? 'text-emerald-700'
           : 'text-on-surface'
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-6 text-left shadow-sm transition-all hover:shadow-md"
+      className="dashboard-stat w-full text-left transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+      style={{ '--stat-accent': tone === 'secondary' ? '#fb7800' : tone === 'success' ? '#059669' : '#041534' }}
     >
-      <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{title}</p>
-      <p className={`font-headline text-4xl font-extrabold ${toneClass}`}>{value}</p>
-      {helper ? <p className="mt-2 text-xs font-medium text-on-surface-variant">{helper}</p> : null}
+      <p className="dashboard-stat-label">{title}</p>
+      <p className={`dashboard-stat-value ${toneClass}`}>{value}</p>
+      {helper ? <p className="mt-2 text-sm font-medium leading-5 text-slate-600">{helper}</p> : null}
     </button>
   )
 }

@@ -1,122 +1,115 @@
 import React from 'react'
 
 const BADGE_MAP = {
-  // Consignment statuses
   SCAN_PENDING: {
-    classes: 'bg-surface-container-high text-on-surface-variant border-outline-variant/30',
-    label: '⏳ Scan Pending',
-  },
-  scan_pending: {
-    classes: 'bg-surface-container-high text-on-surface-variant border-outline-variant/30',
-    label: '⏳ Scan Pending',
+    classes: 'border-slate-300 bg-slate-100 text-slate-700',
+    label: 'Scan Pending',
   },
   PENDING: {
-    classes: 'bg-surface-container-high text-on-surface-variant border-outline-variant/30',
-    label: '⏳ Pending',
+    classes: 'border-amber-200 bg-amber-50 text-amber-800',
+    label: 'Pending',
   },
   CREATED: {
-    classes: 'bg-surface-container-high text-on-surface-variant border-outline-variant/30',
-    label: '⏳ Pending',
-  },
-  created: {
-    classes: 'bg-surface-container-high text-on-surface-variant border-outline-variant/30',
-    label: '⏳ Pending',
+    classes: 'border-slate-300 bg-slate-100 text-slate-700',
+    label: 'Pending',
   },
   IN_TRANSIT: {
     classes: 'border-blue-200 bg-blue-50 text-blue-800',
-    label: '🚛 In Transit',
+    label: 'In Transit',
   },
   ARRIVED: {
-    classes: 'bg-primary-container text-primary border-primary/20',
+    classes: 'border-cyan-200 bg-cyan-50 text-cyan-800',
     label: 'Arrived',
   },
   DELIVERY_PENDING_VERIFICATION: {
-    classes: 'bg-secondary-fixed text-on-secondary-container border-secondary/20',
+    classes: 'border-violet-200 bg-violet-50 text-violet-800',
     label: 'Delivery Review',
   },
-  on_way: {
+  ON_WAY: {
     classes: 'border-blue-200 bg-blue-50 text-blue-800',
-    label: '🚛 In Transit',
+    label: 'In Transit',
   },
   GATE_CLEARED: {
-    classes: 'bg-primary-container text-primary border-primary/20',
-    label: '🔓 Gate Cleared',
+    classes: 'border-indigo-200 bg-indigo-50 text-indigo-800',
+    label: 'Gate Cleared',
   },
-  gate_verified: {
-    classes: 'bg-primary-container text-primary border-primary/20',
-    label: '🔓 Gate Cleared',
+  GATE_VERIFIED: {
+    classes: 'border-indigo-200 bg-indigo-50 text-indigo-800',
+    label: 'Gate Cleared',
   },
   DELIVERED: {
     classes: 'border-emerald-700 bg-emerald-700 text-white',
-    label: '✅ Delivered',
-  },
-  delivered: {
-    classes: 'border-emerald-700 bg-emerald-700 text-white',
-    label: '✅ Delivered',
+    label: 'Delivered',
   },
   BILLED: {
-    classes: 'bg-teal-50 text-teal-700 border-teal-200',
-    label: '🧾 Billed',
+    classes: 'border-teal-200 bg-teal-50 text-teal-800',
+    label: 'Billed',
   },
   CLOSED: {
-    classes: 'bg-slate-100 text-slate-700 border-slate-200',
+    classes: 'border-slate-300 bg-slate-700 text-white',
     label: 'Closed',
   },
   FLAGGED: {
-    classes: 'bg-error-container text-error border-error/20',
+    classes: 'border-red-200 bg-red-50 text-red-800',
     label: 'Flagged',
   },
   CANCELLED: {
-    classes: 'bg-error-container text-error border-error/20',
-    label: '❌ Cancelled',
+    classes: 'border-red-700 bg-red-700 text-white',
+    label: 'Cancelled',
   },
-
-  // Payment statuses
   PAID: {
     classes: 'border-emerald-700 bg-emerald-700 text-white',
-    label: '✅ Paid',
+    label: 'Paid',
   },
-  paid: {
+  VERIFIED: {
     classes: 'border-emerald-700 bg-emerald-700 text-white',
-    label: '✅ Paid',
+    label: 'Verified',
   },
-  pending: {
-    classes: 'border-amber-200 bg-amber-50 text-amber-800',
-    label: '⏳ Pending',
+  HELD: {
+    classes: 'border-orange-200 bg-orange-50 text-orange-800',
+    label: 'Held',
   },
-  held: {
-    classes: 'bg-error-container text-error border-error/20',
-    label: '⚠️ Held',
+  OVERDUE: {
+    classes: 'border-red-700 bg-red-700 text-white',
+    label: 'Overdue',
   },
-  overdue: {
-    classes: 'bg-error text-white border-transparent',
-    label: '🚨 Overdue',
+  APPROVED: {
+    classes: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    label: 'Approved',
   },
-
-  // Driver/Truck approvals
-  approved: {
-    classes: 'bg-tertiary-container text-tertiary border-tertiary/20',
-    label: '✅ Approved',
+  ACTIVE: {
+    classes: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    label: 'Active',
+  },
+  INACTIVE: {
+    classes: 'border-slate-300 bg-slate-100 text-slate-700',
+    label: 'Inactive',
+  },
+  VALID: {
+    classes: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    label: 'Valid',
+  },
+  INVALID: {
+    classes: 'border-red-200 bg-red-50 text-red-800',
+    label: 'Invalid',
   },
 }
 
 export default function StatusBadge({ status, size = 'md' }) {
   const normalized = String(status || '').toUpperCase()
-  const exactNormalized = String(status || '')
-
-  const item = BADGE_MAP[exactNormalized] || BADGE_MAP[normalized] || {
-    classes: 'bg-surface-container-high text-on-surface-variant border-outline-variant/30',
+  const item = BADGE_MAP[normalized] || {
+    classes: 'border-slate-300 bg-slate-100 text-slate-700',
     label: typeof status === 'string' ? status.replaceAll('_', ' ') : status,
   }
 
   const sizeClasses = {
-    sm: 'px-2 py-0.5 text-[10px]',
-    md: 'px-3 py-1 text-xs',
-    lg: 'px-4 py-1.5 text-sm',
+    sm: 'px-2.5 py-1 text-[11px]',
+    md: 'px-3 py-1.5 text-xs',
+    lg: 'px-4 py-2 text-sm',
   }
 
   return (
-    <span className={`inline-flex items-center rounded-full border font-bold uppercase tracking-wider transition-all duration-200 ${sizeClasses[size] || sizeClasses.md} ${item.classes}`}>
+    <span className={`inline-flex items-center whitespace-nowrap rounded-full border font-extrabold uppercase ${sizeClasses[size] || sizeClasses.md} ${item.classes}`}>
       {item.label}
     </span>
   )

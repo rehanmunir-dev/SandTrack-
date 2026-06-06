@@ -5,10 +5,11 @@ import StatusBadge from '../../../components/common/StatusBadge'
 import { useRoleSystem } from '../../../context/roleSystem/RoleSystemContext'
 
 function StatCard({ label, value, tone = 'text-primary' }) {
+  const accent = tone === 'text-secondary' ? '#fb7800' : '#041534'
   return (
-    <div className="rounded-xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{label}</p>
-      <p className={`mt-2 font-headline text-3xl font-extrabold ${tone}`}>{value}</p>
+    <div className="dashboard-stat" style={{ '--stat-accent': accent }}>
+      <p className="dashboard-stat-label">{label}</p>
+      <p className={`dashboard-stat-value ${tone}`}>{value}</p>
     </div>
   )
 }
@@ -33,13 +34,16 @@ export default function OperatorDashboardPage() {
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <SectionCard title="Quick Actions" subtitle="Operator workflow shortcuts">
           <div className="space-y-3">
-            <button type="button" onClick={() => navigate('/app/operator/consignments/create')} className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white">
+            <button type="button" onClick={() => navigate('/app/operator/consignments/create')} className="app-btn-primary w-full">
+              <span className="material-symbols-outlined text-xl">add_box</span>
               Create Consignment
             </button>
-            <button type="button" onClick={() => navigate('/app/operator/drivers')} className="w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3 text-sm font-bold text-on-surface">
+            <button type="button" onClick={() => navigate('/app/operator/drivers')} className="app-btn-secondary w-full">
+              <span className="material-symbols-outlined text-xl">person_add</span>
               Add Driver
             </button>
-            <button type="button" onClick={() => navigate('/app/operator/trucks')} className="w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3 text-sm font-bold text-on-surface">
+            <button type="button" onClick={() => navigate('/app/operator/trucks')} className="app-btn-secondary w-full">
+              <span className="material-symbols-outlined text-xl">add_road</span>
               Add Truck
             </button>
           </div>
@@ -47,9 +51,9 @@ export default function OperatorDashboardPage() {
 
         <div className="lg:col-span-2">
           <SectionCard title="Recent Consignments" subtitle="Latest operator-created records">
-            <div className="app-table-scroll rounded-lg border border-outline-variant/20">
+            <div className="app-table-scroll">
               <table className="app-table text-left text-sm">
-                <thead className="bg-surface-container-low text-on-surface-variant">
+                <thead>
                   <tr>
                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest">ID</th>
                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest">Driver</th>

@@ -40,11 +40,11 @@ export default function OwnerLayout() {
   }
 
   return (
-    <div className="bg-background font-body text-on-background selection:bg-primary-fixed selection:text-on-primary-fixed">
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-80 flex-col bg-slate-50 p-7 lg:flex">
-        <div className="mb-10">
+    <div className="app-theme min-h-screen bg-slate-50 font-body text-on-background selection:bg-primary-fixed selection:text-on-primary-fixed">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white px-5 py-6 lg:flex">
+        <div className="mb-7 border-b border-slate-100 pb-6">
           <div className="flex justify-center">
-            <img src="/sandtrack-logo.jpg" alt="SandTrack" className="h-auto w-48 object-contain" />
+            <img src="/sandtrack-logo.jpg" alt="SandTrack" className="h-auto w-44 object-contain" />
           </div>
         </div>
 
@@ -53,10 +53,10 @@ export default function OwnerLayout() {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 rounded-lg px-4 py-3.5 text-base font-semibold transition-all ${
+              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold transition-all ${
                 isActive(location.pathname, item.path)
-                  ? 'border-r-4 border-blue-900 bg-slate-100 text-blue-900'
-                  : 'text-slate-500 hover:bg-slate-100'
+                  ? 'bg-blue-950 text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-blue-950'
               }`}
             >
               <span className="material-symbols-outlined">{item.icon}</span>
@@ -132,8 +132,8 @@ export default function OwnerLayout() {
         </div>
       ) : null}
 
-      <main className="min-h-screen lg:ml-80">
-        <header className="sticky top-0 z-30 border-b border-outline-variant/20 bg-surface-container-lowest/90 backdrop-blur">
+      <main className="min-h-screen lg:ml-72">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
           <div className="px-3 py-4 sm:px-5 md:px-7 lg:px-10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
@@ -147,10 +147,10 @@ export default function OwnerLayout() {
                     <span className="material-symbols-outlined text-base">menu</span>
                   </button>
                   <div className="min-w-0">
-                    <h2 className="font-headline text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-on-background truncate">
+                    <h2 className="truncate font-headline text-xl font-extrabold text-slate-950 sm:text-2xl md:text-3xl">
                       {title}
                     </h2>
-                    <p className="text-xs sm:text-sm font-medium text-on-surface-variant">Owner and super admin control center</p>
+                    <p className="mt-1 text-xs font-medium text-slate-600 sm:text-sm">Owner and super admin control center</p>
                   </div>
                 </div>
               </div>
@@ -186,7 +186,7 @@ export default function OwnerLayout() {
                     </div>
                     <div className="hidden text-right xl:block">
                       <p className="text-xs sm:text-sm font-bold text-on-background">{currentUser?.name}</p>
-                      <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                      <p className="text-[11px] font-bold uppercase text-slate-600">
                         {ROLE_LABELS[currentUser?.role] || currentUser?.role}
                       </p>
                     </div>
@@ -197,7 +197,7 @@ export default function OwnerLayout() {
           </div>
         </header>
 
-        <div className="p-3 sm:p-5 md:p-7 lg:p-10">
+        <div className="mx-auto w-full max-w-[1600px] p-3 sm:p-5 md:p-6 lg:p-8">
           <Outlet />
         </div>
       </main>

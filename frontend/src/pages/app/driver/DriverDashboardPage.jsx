@@ -72,7 +72,7 @@ export default function DriverDashboardPage() {
   return (
     <div className="space-y-6">
       {sessionExpired && (
-        <div className="rounded border border-error bg-error-container p-4 text-on-error-container">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-900 shadow-sm">
           <p className="font-bold text-lg">QR Session Expired</p>
           <p className="text-sm">The 5-minute link has expired. Please request a new link from the operator.</p>
         </div>
@@ -81,10 +81,10 @@ export default function DriverDashboardPage() {
       <SectionCard title="Driver Dashboard" subtitle="One trip at a time. Show the assigned QR at the gate.">
         {currentTrip && !sessionExpired ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-5 rounded-xl border border-outline-variant/15 bg-surface-container-lowest p-5 sm:p-6">
+            <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="flex flex-col items-center text-center">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Active QR</p>
-                <div className="mt-4 inline-flex rounded-3xl bg-white p-5 shadow-sm">
+                <div className="mt-4 inline-flex rounded-xl border border-slate-200 bg-white p-5 shadow-md">
                   <QRCodeSVG value={currentTrip.qrCode} size={240} level="M" includeMargin />
                 </div>
                 <p className="mt-4 break-all text-sm font-semibold text-on-surface-variant">{currentTrip.qrCode}</p>
@@ -92,7 +92,7 @@ export default function DriverDashboardPage() {
                 {currentTrip.isFlagged && <p className="mt-2 font-bold text-error">⚠️ THIS CONSIGNMENT IS FLAGGED ⚠️</p>}
               </div>
 
-              <div className="grid grid-cols-1 gap-3 rounded-2xl border border-outline-variant/15 bg-surface-container-high p-4 text-sm sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-800 sm:grid-cols-2">
                 <p><strong>Driver:</strong> {assignedDriver?.name || 'N/A'}</p>
                 <p><strong>Truck:</strong> {currentTrip.truckId}</p>
                 <p><strong>Origin:</strong> {currentTrip.originTerminal || 'N/A'}</p>
@@ -103,10 +103,10 @@ export default function DriverDashboardPage() {
             </div>
             
             <div className="space-y-4">
-              <h3 className="font-headline text-lg font-bold">Trip Activity Log</h3>
+              <h3 className="border-b border-slate-200 pb-3 font-headline text-lg font-extrabold text-slate-950">Trip Activity</h3>
               <div className="space-y-3">
                 {activityLog.map((log, index) => (
-                  <div key={index} className="flex gap-4 border-l-2 border-primary pl-4 py-1">
+                  <div key={index} className="flex gap-4 rounded-r-lg border-l-4 border-blue-950 bg-white py-3 pl-4 pr-3 shadow-sm">
                     <div className="text-xs text-on-surface-variant whitespace-nowrap w-20">
                       {new Date(log.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </div>

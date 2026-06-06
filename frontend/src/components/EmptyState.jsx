@@ -2,13 +2,13 @@ import React from 'react'
 
 export default function EmptyState({ icon = 'folder_open', title = 'No data found', message, actionLabel, onAction }) {
   return (
-    <div className="flex flex-col items-center justify-center text-center p-8 border border-dashed border-outline-variant/30 rounded-2xl bg-surface-container-lowest/50">
-      <span className="material-symbols-outlined text-4xl sm:text-5xl text-outline/65 mb-3">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+      <span className="material-symbols-outlined mb-3 text-4xl text-slate-400 sm:text-5xl">
         {icon}
       </span>
-      <h3 className="font-headline text-base sm:text-lg font-bold text-on-background">{title}</h3>
+      <h3 className="font-headline text-base font-extrabold text-slate-900 sm:text-lg">{title}</h3>
       {message && (
-        <p className="mt-1 text-xs sm:text-sm font-medium text-on-surface-variant max-w-sm">
+        <p className="mt-1 max-w-sm text-sm font-medium leading-6 text-slate-600">
           {message}
         </p>
       )}

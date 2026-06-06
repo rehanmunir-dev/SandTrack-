@@ -5,10 +5,10 @@
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
-  background: #faf8ff;
+  background: #f6f7fb;
   color: #191b22;
-  font-size: clamp(14px, 1.2vw, 17px);
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -35,6 +35,24 @@ h4,
 h5,
 h6 {
   font-family: 'Manrope', sans-serif;
+  letter-spacing: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(251, 120, 0, 0.35);
+  outline-offset: 2px;
 }
 
 .material-symbols-outlined {
@@ -64,11 +82,12 @@ h6 {
 
 @layer components {
   .app-card {
-    @apply rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-3 shadow-sm sm:p-5 md:p-7;
+    @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 md:p-6;
+    box-shadow: 0 1px 2px rgba(4, 21, 52, 0.04), 0 10px 28px rgba(4, 21, 52, 0.055);
   }
 
   .app-table-scroll {
-    @apply overflow-x-auto;
+    @apply overflow-x-auto rounded-xl border border-slate-200 bg-white;
   }
 
   .app-table {
@@ -76,23 +95,24 @@ h6 {
   }
 
   .app-input {
-    @apply w-full rounded-xl border border-outline-variant bg-surface-container-highest px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-on-surface placeholder:text-outline/60 focus:border-primary focus:ring-2 focus:ring-primary/20;
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 sm:px-4 sm:text-base;
   }
 
   .app-input-mobile {
-    @apply w-full rounded-xl border border-outline-variant bg-surface-container-highest px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-on-surface placeholder:text-outline/60 focus:border-primary focus:ring-2 focus:ring-primary/20;
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 sm:px-4 sm:text-base;
   }
 
   .app-btn-primary {
-    @apply rounded-xl bg-primary px-4 sm:px-5 py-2 sm:py-3 text-sm sm:text-base font-semibold text-on-primary shadow-sm transition-all hover:opacity-90 active:scale-[0.99];
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-container hover:shadow-md active:scale-[0.99] sm:px-5;
   }
 
   .app-btn-secondary {
-    @apply rounded-xl border border-outline-variant bg-surface-container-low px-4 sm:px-5 py-2 sm:py-3 text-sm sm:text-base font-semibold text-primary transition-colors hover:bg-surface-container-high;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-primary transition-colors hover:border-slate-400 hover:bg-slate-50 sm:px-5;
   }
 
   .app-kpi-card {
-    @apply rounded-2xl border border-outline-variant/10 bg-surface-container-lowest p-4 sm:p-6 shadow-sm;
+    @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all sm:p-6;
+    box-shadow: 0 1px 2px rgba(4, 21, 52, 0.04), 0 8px 24px rgba(4, 21, 52, 0.05);
   }
 }
 
@@ -109,13 +129,13 @@ h6 {
 }
 
 .app-theme .text-slate-400 {
-  color: #75777f !important;
+  color: #64748b !important;
 }
 
 .app-theme .text-slate-500,
 .app-theme .text-slate-600,
 .app-theme .text-slate-700 {
-  color: #45464e !important;
+  color: #475569 !important;
 }
 
 .app-theme .text-slate-800,
@@ -124,11 +144,11 @@ h6 {
 }
 
 .app-theme .bg-slate-50 {
-  background-color: #f2f3fd !important;
+  background-color: #f8fafc !important;
 }
 
 .app-theme .bg-slate-100 {
-  background-color: #ededf7 !important;
+  background-color: #f1f5f9 !important;
 }
 
 .app-theme .bg-slate-900 {
@@ -146,17 +166,94 @@ h6 {
 .app-theme select,
 .app-theme input,
 .app-theme textarea {
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
 }
 
 .app-theme table th {
-  font-size: 11px;
-  padding-top: 0.85rem;
-  padding-bottom: 0.85rem;
+  font-size: 0.72rem;
+  line-height: 1rem;
+  letter-spacing: 0;
+  padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
 }
 
 .app-theme table td {
-  font-size: 0.96rem;
+  font-size: 0.9rem;
   padding-top: 0.9rem;
   padding-bottom: 0.9rem;
+}
+
+.app-theme .app-table thead {
+  background: #041534;
+  color: #ffffff;
+}
+
+.app-theme .app-table thead th {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.app-theme .app-table tbody tr {
+  transition: background-color 160ms ease;
+}
+
+.app-theme .app-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.app-theme .app-table tbody tr:hover {
+  background: #eff6ff;
+}
+
+.app-theme .app-table tbody td {
+  color: #334155;
+}
+
+.app-theme label {
+  color: #334155;
+}
+
+.dashboard-stat {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(4, 21, 52, 0.04), 0 8px 24px rgba(4, 21, 52, 0.05);
+}
+
+.dashboard-stat::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--stat-accent, #041534);
+  content: '';
+}
+
+.dashboard-stat-label {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1rem;
+  text-transform: uppercase;
+}
+
+.dashboard-stat-value {
+  margin-top: 0.5rem;
+  color: #041534;
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.875rem;
+  font-weight: 800;
+  line-height: 2.25rem;
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 15px;
+  }
+
+  .app-theme table td {
+    font-size: 0.85rem;
+  }
 }

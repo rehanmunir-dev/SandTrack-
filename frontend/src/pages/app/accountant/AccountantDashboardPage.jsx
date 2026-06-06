@@ -16,10 +16,17 @@ import { useRoleSystem } from '../../../context/roleSystem/RoleSystemContext'
 import { formatPKR } from '../../../utils/formatCurrency'
 
 function Card({ label, value, tone = 'text-primary' }) {
+  const accent = tone === 'text-secondary'
+    ? '#f59e0b'
+    : tone === 'text-tertiary'
+      ? '#059669'
+      : tone === 'text-error'
+        ? '#dc2626'
+        : '#041534'
   return (
-    <div className="rounded-xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{label}</p>
-      <p className={`mt-2 font-headline text-3xl font-extrabold ${tone}`}>{value}</p>
+    <div className="dashboard-stat" style={{ '--stat-accent': accent }}>
+      <p className="dashboard-stat-label">{label}</p>
+      <p className={`dashboard-stat-value ${tone}`}>{value}</p>
     </div>
   )
 }
@@ -207,7 +214,7 @@ export default function AccountantDashboardPage() {
       <SectionCard title="Latest Payments" subtitle="Pulled from ledger data and sorted by latest date.">
         <div className="space-y-3 text-sm">
           {latestPayments.map((payment) => (
-            <div key={payment.id} className="rounded-xl border border-outline-variant/20 bg-surface-container-low p-4">
+            <div key={payment.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:bg-slate-50">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-headline text-base font-bold text-on-surface">{payment.ledgerRef}</p>
@@ -219,8 +226,8 @@ export default function AccountantDashboardPage() {
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className="rounded-full bg-surface-container-high px-3 py-1 text-xs font-semibold text-on-surface-variant">{payment.method || 'Cash'}</span>
-                <span className="rounded-full bg-surface-container-high px-3 py-1 text-xs font-semibold text-on-surface-variant">{payment.status}</span>
+                <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{payment.method || 'Cash'}</span>
+                <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{payment.status}</span>
               </div>
             </div>
           ))}

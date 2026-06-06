@@ -102,7 +102,7 @@ export default function NotificationBell({ owner = false }) {
       <button
         type="button"
         onClick={toggleNotifications}
-        className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-outline-variant/30 bg-surface-container-lowest text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface"
+        className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-blue-950"
         aria-label="Open notifications"
         aria-expanded={isOpen}
       >
@@ -115,8 +115,8 @@ export default function NotificationBell({ owner = false }) {
       </button>
 
       {isOpen ? (
-        <div className="fixed left-3 right-3 top-20 z-50 max-h-[70vh] overflow-hidden rounded-lg border border-outline-variant/20 bg-white shadow-2xl sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-96">
-          <div className="flex items-center justify-between border-b border-outline-variant/20 px-4 py-3">
+        <div className="fixed left-3 right-3 top-20 z-50 max-h-[70vh] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-96">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
             <div>
               <p className="text-sm font-extrabold text-on-surface">Notifications</p>
               <p className="text-xs text-on-surface-variant">Live updates related to your role</p>
@@ -150,7 +150,7 @@ export default function NotificationBell({ owner = false }) {
                 }
 
                 return (
-                  <div key={notification.id} className="flex gap-3 border-b border-outline-variant/15 px-4 py-3 last:border-b-0">
+                  <div key={notification.id} className="flex gap-3 border-b border-slate-100 px-4 py-3 transition-colors last:border-b-0 hover:bg-slate-50">
                     <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${detail.tone}`}>
                       <span className="material-symbols-outlined text-xl">{detail.icon}</span>
                     </div>

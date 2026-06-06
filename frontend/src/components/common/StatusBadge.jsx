@@ -1,54 +1,43 @@
 const COLOR_MAP = {
-  CREATED: 'bg-surface-container-high text-on-surface',
-  LOADED: 'bg-primary-container text-on-primary',
-  IN_TRANSIT: 'bg-secondary-container/20 text-secondary',
-  ARRIVED: 'bg-primary-container text-primary',
-  DELIVERY_PENDING_VERIFICATION: 'bg-secondary-fixed text-on-secondary-container',
-  AT_GATE: 'bg-secondary-fixed text-on-secondary-container',
-  VERIFIED_FOR_RELEASE: 'bg-primary-fixed text-on-primary-fixed-variant',
-  DELIVERED: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
-  FLAGGED: 'bg-error-container text-on-error-container',
-  BILLED: 'bg-teal-50 text-teal-700',
-  CLOSED: 'bg-surface-variant text-on-surface-variant',
-
-  created: 'bg-surface-container-high text-on-surface',
-  gate_verified: 'bg-primary-container text-on-primary',
-  on_way: 'bg-secondary-container/20 text-secondary',
-  delivered: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
-  flagged: 'bg-error-container text-on-error-container',
-
-  NOT_SUBMITTED: 'bg-surface-container-high text-on-surface-variant',
-  PENDING_VERIFICATION: 'bg-secondary-fixed text-on-secondary-container',
-  VERIFIED: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
-  REJECTED: 'bg-error-container text-on-error-container',
-
-  pending: 'bg-surface-container-high text-on-surface-variant',
-  paid: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
-  held: 'bg-error-container text-on-error-container',
-  overdue: 'bg-error text-white',
-
-  valid: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
-  used: 'bg-surface-container-high text-on-surface-variant',
-  invalid: 'bg-error-container text-on-error-container',
-
-  waiting: 'bg-surface-container-high text-on-surface-variant',
-  approved: 'bg-primary-container text-on-primary',
-  'on route': 'bg-secondary-fixed text-on-secondary-container',
-
-  INFO: 'bg-primary-fixed text-on-primary-fixed-variant',
-  WARNING: 'bg-secondary-fixed text-on-secondary-container',
-  CRITICAL: 'bg-error-container text-on-error-container',
-  RESOLVED: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
-
-  OPEN: 'bg-error-container text-on-error-container',
+  CREATED: 'border-slate-300 bg-slate-100 text-slate-700',
+  LOADED: 'border-blue-950 bg-blue-950 text-white',
+  IN_TRANSIT: 'border-blue-200 bg-blue-50 text-blue-800',
+  ARRIVED: 'border-cyan-200 bg-cyan-50 text-cyan-800',
+  DELIVERY_PENDING_VERIFICATION: 'border-violet-200 bg-violet-50 text-violet-800',
+  AT_GATE: 'border-amber-200 bg-amber-50 text-amber-800',
+  VERIFIED_FOR_RELEASE: 'border-indigo-200 bg-indigo-50 text-indigo-800',
+  DELIVERED: 'border-emerald-700 bg-emerald-700 text-white',
+  FLAGGED: 'border-red-200 bg-red-50 text-red-800',
+  BILLED: 'border-teal-200 bg-teal-50 text-teal-800',
+  CLOSED: 'border-slate-700 bg-slate-700 text-white',
+  NOT_SUBMITTED: 'border-slate-300 bg-slate-100 text-slate-700',
+  PENDING_VERIFICATION: 'border-amber-200 bg-amber-50 text-amber-800',
+  VERIFIED: 'border-emerald-700 bg-emerald-700 text-white',
+  REJECTED: 'border-red-700 bg-red-700 text-white',
+  PENDING: 'border-amber-200 bg-amber-50 text-amber-800',
+  PAID: 'border-emerald-700 bg-emerald-700 text-white',
+  HELD: 'border-orange-200 bg-orange-50 text-orange-800',
+  OVERDUE: 'border-red-700 bg-red-700 text-white',
+  VALID: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  USED: 'border-slate-300 bg-slate-100 text-slate-700',
+  INVALID: 'border-red-200 bg-red-50 text-red-800',
+  WAITING: 'border-slate-300 bg-slate-100 text-slate-700',
+  APPROVED: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  'ON ROUTE': 'border-blue-200 bg-blue-50 text-blue-800',
+  INFO: 'border-blue-200 bg-blue-50 text-blue-800',
+  WARNING: 'border-amber-200 bg-amber-50 text-amber-800',
+  CRITICAL: 'border-red-700 bg-red-700 text-white',
+  RESOLVED: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  OPEN: 'border-red-200 bg-red-50 text-red-800',
 }
 
 export default function StatusBadge({ status }) {
-  const classes = COLOR_MAP[status] || 'bg-surface-container-high text-on-surface-variant'
+  const normalized = String(status || '').toUpperCase()
+  const classes = COLOR_MAP[normalized] || 'border-slate-300 bg-slate-100 text-slate-700'
   const label = typeof status === 'string' ? status.replaceAll('_', ' ') : status
 
   return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${classes}`}>
+    <span className={`inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-extrabold uppercase ${classes}`}>
       {label}
     </span>
   )

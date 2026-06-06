@@ -11,17 +11,20 @@ export default function WatchmanDashboardPage() {
     <div className="space-y-6">
       <SectionCard title="Watchman Dashboard" subtitle="Gate verification and scan monitoring.">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Recent Scans</p>
-            <p className="mt-2 font-headline text-3xl font-extrabold text-primary">{recentScans.length}</p>
+          <div className="dashboard-stat" style={{ '--stat-accent': '#2563eb' }}>
+            <p className="dashboard-stat-label">Recent Scans</p>
+            <p className="dashboard-stat-value">{recentScans.length}</p>
           </div>
-          <div className="rounded-xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Flagged Entries</p>
-            <p className="mt-2 font-headline text-3xl font-extrabold text-error">{flagged}</p>
+          <div className="dashboard-stat" style={{ '--stat-accent': '#dc2626' }}>
+            <p className="dashboard-stat-label">Flagged Entries</p>
+            <p className="dashboard-stat-value text-red-700">{flagged}</p>
           </div>
-          <div className="rounded-xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Quick Scan</p>
-            <a href="/app/watchman/scan" className="mt-2 inline-block rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white">Open Scanner</a>
+          <div className="dashboard-stat" style={{ '--stat-accent': '#059669' }}>
+            <p className="dashboard-stat-label">Gate Control</p>
+            <a href="/app/watchman/scan" className="app-btn-primary mt-3 w-full">
+              <span className="material-symbols-outlined text-xl">qr_code_scanner</span>
+              Open Scanner
+            </a>
           </div>
         </div>
       </SectionCard>
@@ -29,7 +32,7 @@ export default function WatchmanDashboardPage() {
       <SectionCard title="Recent Gate Results" subtitle="Latest QR validation events">
         <div className="space-y-2">
           {recentScans.map((scan) => (
-            <div key={scan.id} className="rounded-lg border border-outline-variant/20 bg-surface-container-low p-3 text-sm">
+            <div key={scan.id} className="rounded-lg border border-slate-200 bg-white p-4 text-sm shadow-sm transition-colors hover:bg-slate-50">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-semibold text-on-surface">{scan.qrCode}</p>
                 <StatusBadge status={scan.result} />
