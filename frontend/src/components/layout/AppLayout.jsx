@@ -161,7 +161,7 @@ export default function AppLayout() {
 
   return (
     <div className="app-theme min-h-screen bg-slate-50 font-body text-on-background selection:bg-primary-fixed selection:text-on-primary-fixed">
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white px-5 py-6 lg:flex">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white/95 px-5 py-6 shadow-[8px_0_34px_rgba(4,21,52,0.045)] backdrop-blur lg:flex">
         <div className="mb-7 border-b border-slate-100 pb-6">
           <div className="flex justify-center">
             <img src="/sandtrack-logo.jpg" alt="SandTrack" className="h-auto w-44 object-contain" />
@@ -191,7 +191,7 @@ export default function AppLayout() {
           })}
         </nav>
 
-        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 p-4 shadow-inner">
           <p className="text-[11px] font-extrabold uppercase text-slate-500">Signed in as</p>
           <p className="mt-1 text-sm font-extrabold text-blue-950">
             {ROLE_LABELS[currentUser?.role] || currentUser?.role || 'User'}
@@ -215,7 +215,7 @@ export default function AppLayout() {
             className="absolute inset-0 bg-black/40"
             aria-label="Close menu"
           />
-          <aside className="relative z-10 h-full w-72 max-w-[80vw] bg-surface-container-lowest p-6 shadow-2xl">
+          <aside className="relative z-10 h-full w-72 max-w-[80vw] bg-white p-6 shadow-2xl">
             <div className="mb-8 flex items-center justify-between">
               <img src="/sandtrack-logo.jpg" alt="SandTrack" className="h-10 w-auto object-contain" />
               <button
@@ -240,8 +240,8 @@ export default function AppLayout() {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200 ${
                       isActive
-                        ? 'border-l-4 border-primary bg-surface-container-low text-primary'
-                        : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+                        ? 'bg-blue-950 text-white shadow-sm'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-blue-950'
                     }`}
                   >
                     <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
@@ -279,7 +279,7 @@ export default function AppLayout() {
       ) : null}
 
       <main className="min-h-screen lg:ml-72">
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 shadow-[0_8px_30px_rgba(4,21,52,0.035)] backdrop-blur">
           <div className="px-3 py-4 sm:px-5 md:px-7 lg:px-10">
             <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
               <div className="min-w-0">
@@ -306,7 +306,7 @@ export default function AppLayout() {
                 <button
                   type="button"
                   onClick={() => navigate('/app/profile')}
-                  className="hidden items-center gap-2 rounded-full border border-outline-variant/20 bg-surface-container-low px-2 py-2 transition-colors hover:bg-surface-container sm:flex sm:gap-3 sm:px-3"
+                  className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-2 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:shadow-md sm:flex sm:gap-3 sm:px-3"
                   aria-label="Open profile"
                 >
                   <div className="flex h-8 sm:h-10 w-8 sm:w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs sm:text-sm font-bold text-on-primary">

@@ -13,6 +13,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(4, 21, 52, 0.045), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(251, 120, 0, 0.055), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(246, 247, 251, 0.94));
+  content: '';
+}
+
 html,
 body,
 #root {
@@ -82,12 +94,13 @@ a {
 
 @layer components {
   .app-card {
-    @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 md:p-6;
-    box-shadow: 0 1px 2px rgba(4, 21, 52, 0.04), 0 10px 28px rgba(4, 21, 52, 0.055);
+    @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 sm:p-5 md:p-6;
+    box-shadow: 0 1px 2px rgba(4, 21, 52, 0.04), 0 14px 34px rgba(4, 21, 52, 0.06);
   }
 
   .app-table-scroll {
-    @apply overflow-x-auto rounded-xl border border-slate-200 bg-white;
+    @apply overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 22px rgba(4, 21, 52, 0.04);
   }
 
   .app-table {
@@ -95,24 +108,30 @@ a {
   }
 
   .app-input {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 sm:px-4 sm:text-base;
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15 sm:px-4 sm:text-base;
   }
 
   .app-input-mobile {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15 sm:px-4 sm:text-base;
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15 sm:px-4 sm:text-base;
   }
 
   .app-btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-container hover:shadow-md active:scale-[0.99] sm:px-5;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-container hover:shadow-lg active:translate-y-0 active:scale-[0.99] sm:px-5;
   }
 
   .app-btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-primary transition-colors hover:border-slate-400 hover:bg-slate-50 sm:px-5;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-primary shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md active:translate-y-0 sm:px-5;
   }
 
   .app-kpi-card {
-    @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all sm:p-6;
-    box-shadow: 0 1px 2px rgba(4, 21, 52, 0.04), 0 8px 24px rgba(4, 21, 52, 0.05);
+    @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 sm:p-6;
+    box-shadow: 0 1px 2px rgba(4, 21, 52, 0.04), 0 12px 28px rgba(4, 21, 52, 0.055);
+  }
+
+  .app-kpi-card:hover,
+  .app-card:hover {
+    border-color: #d5d8e2;
+    box-shadow: 0 1px 2px rgba(4, 21, 52, 0.05), 0 18px 42px rgba(4, 21, 52, 0.075);
   }
 }
 
@@ -184,7 +203,7 @@ a {
 }
 
 .app-theme .app-table thead {
-  background: #041534;
+  background: linear-gradient(180deg, #08204b 0%, #041534 100%);
   color: #ffffff;
 }
 
@@ -194,7 +213,7 @@ a {
 }
 
 .app-theme .app-table tbody tr {
-  transition: background-color 160ms ease;
+  transition: background-color 160ms ease, box-shadow 160ms ease;
 }
 
 .app-theme .app-table tbody tr:nth-child(even) {
@@ -203,6 +222,7 @@ a {
 
 .app-theme .app-table tbody tr:hover {
   background: #eff6ff;
+  box-shadow: inset 3px 0 0 #fb7800;
 }
 
 .app-theme .app-table tbody td {
@@ -217,10 +237,11 @@ a {
   position: relative;
   overflow: hidden;
   border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   background: #ffffff;
   padding: 1.25rem;
-  box-shadow: 0 1px 2px rgba(4, 21, 52, 0.04), 0 8px 24px rgba(4, 21, 52, 0.05);
+  box-shadow: 0 1px 2px rgba(4, 21, 52, 0.04), 0 12px 30px rgba(4, 21, 52, 0.055);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .dashboard-stat::before {
@@ -231,7 +252,23 @@ a {
   content: '';
 }
 
+.dashboard-stat::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), transparent 42%);
+  content: '';
+}
+
+.dashboard-stat:hover {
+  transform: translateY(-2px);
+  border-color: #d5d8e2;
+  box-shadow: 0 1px 2px rgba(4, 21, 52, 0.05), 0 18px 42px rgba(4, 21, 52, 0.08);
+}
+
 .dashboard-stat-label {
+  position: relative;
+  z-index: 1;
   color: #64748b;
   font-size: 0.72rem;
   font-weight: 800;
@@ -240,12 +277,22 @@ a {
 }
 
 .dashboard-stat-value {
+  position: relative;
+  z-index: 1;
   margin-top: 0.5rem;
   color: #041534;
   font-family: 'Manrope', sans-serif;
   font-size: 1.875rem;
   font-weight: 800;
   line-height: 2.25rem;
+}
+
+.app-theme aside nav a {
+  position: relative;
+}
+
+.app-theme aside nav a:not([class*='bg-blue-950']):hover {
+  transform: translateX(2px);
 }
 
 @media (max-width: 640px) {

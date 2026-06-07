@@ -41,7 +41,7 @@ export default function OwnerLayout() {
 
   return (
     <div className="app-theme min-h-screen bg-slate-50 font-body text-on-background selection:bg-primary-fixed selection:text-on-primary-fixed">
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white px-5 py-6 lg:flex">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white/95 px-5 py-6 shadow-[8px_0_34px_rgba(4,21,52,0.045)] backdrop-blur lg:flex">
         <div className="mb-7 border-b border-slate-100 pb-6">
           <div className="flex justify-center">
             <img src="/sandtrack-logo.jpg" alt="SandTrack" className="h-auto w-44 object-contain" />
@@ -65,7 +65,7 @@ export default function OwnerLayout() {
           ))}
         </nav>
 
-        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/90 p-4 shadow-inner">
           <p className="text-[11px] font-extrabold uppercase text-slate-500">Signed in as</p>
           <p className="mt-1 text-sm font-extrabold text-blue-950">
             {ROLE_LABELS[currentUser?.role] || currentUser?.role || 'Owner'}
@@ -147,7 +147,7 @@ export default function OwnerLayout() {
       ) : null}
 
       <main className="min-h-screen lg:ml-72">
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 shadow-[0_8px_30px_rgba(4,21,52,0.035)] backdrop-blur">
           <div className="px-3 py-4 sm:px-5 md:px-7 lg:px-10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
@@ -180,7 +180,7 @@ export default function OwnerLayout() {
                   <button
                     type="button"
                     onClick={submitGlobalSearch}
-                    className="hidden sm:block rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white flex-shrink-0"
+                    className="hidden flex-shrink-0 rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary-container hover:shadow-md sm:block"
                   >
                     Search
                   </button>
@@ -188,7 +188,7 @@ export default function OwnerLayout() {
                   <button
                     type="button"
                     onClick={() => navigate(OWNER_ROUTES.PROFILE)}
-                    className="hidden sm:flex items-center gap-2 sm:gap-3 rounded-full border border-outline-variant/20 bg-surface-container-low px-2 sm:px-3 py-2 transition-colors hover:bg-surface-container flex-shrink-0"
+                    className="hidden flex-shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-2 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:shadow-md sm:flex sm:gap-3 sm:px-3"
                     aria-label="Open profile"
                   >
                     <div className="flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center overflow-hidden rounded-full bg-primary text-xs sm:text-sm font-bold text-on-primary">

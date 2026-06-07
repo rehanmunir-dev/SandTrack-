@@ -1,8 +1,11 @@
 export default function DetailCard({ title, children, right }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md">
       <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
-        <h4 className="font-headline text-base font-extrabold text-slate-950">{title}</h4>
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-primary" />
+          <h4 className="font-headline text-base font-extrabold text-slate-950">{title}</h4>
+        </div>
         {right || null}
       </div>
       {children}
