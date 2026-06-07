@@ -65,6 +65,20 @@ export default function OwnerLayout() {
           ))}
         </nav>
 
+        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-[11px] font-extrabold uppercase text-slate-500">Signed in as</p>
+          <p className="mt-1 text-sm font-extrabold text-blue-950">
+            {ROLE_LABELS[currentUser?.role] || currentUser?.role || 'Owner'}
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate(OWNER_ROUTES.PROFILE)}
+            className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline"
+          >
+            <span className="material-symbols-outlined text-base">manage_accounts</span>
+            Profile settings
+          </button>
+        </div>
       </aside>
 
       {isMobileMenuOpen ? (

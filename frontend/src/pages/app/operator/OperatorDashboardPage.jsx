@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SectionCard from '../../../components/common/SectionCard'
 import StatusBadge from '../../../components/common/StatusBadge'
+import WorkflowGuide from '../../../components/WorkflowGuide'
 import { useRoleSystem } from '../../../context/roleSystem/RoleSystemContext'
 
 function StatCard({ label, value, tone = 'text-primary' }) {
@@ -23,6 +24,14 @@ export default function OperatorDashboardPage() {
   return (
     <div className="space-y-6">
       <SectionCard title="Operator Dashboard" subtitle="Create consignments, manage trucks and drivers, and generate QR records.">
+        <WorkflowGuide
+          title="Operator flow"
+          items={[
+            { label: '1. Add records', description: 'Register the driver and truck before assigning a load.' },
+            { label: '2. Create consignment', description: 'Choose an available driver and truck, then generate the QR pass.' },
+            { label: '3. Share QR', description: 'Print or send the public QR link to the driver for gate clearance.' },
+          ]}
+        />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Consignments Today" value={operatorSummary.consignmentsCreatedToday} />
           <StatCard label="Trucks Active" value={operatorSummary.trucksActive} />
@@ -32,7 +41,7 @@ export default function OperatorDashboardPage() {
       </SectionCard>
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <SectionCard title="Quick Actions" subtitle="Operator workflow shortcuts">
+        <SectionCard title="Quick Actions" subtitle="Most-used operator tasks">
           <div className="space-y-3">
             <button type="button" onClick={() => navigate('/app/operator/consignments/create')} className="app-btn-primary w-full">
               <span className="material-symbols-outlined text-xl">add_box</span>

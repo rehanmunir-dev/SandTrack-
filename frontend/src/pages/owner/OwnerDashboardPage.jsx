@@ -9,6 +9,7 @@ import SearchBar from '../../components/owner/SearchBar'
 import PeriodDateFilterDropdown from '../../components/common/PeriodDateFilterDropdown'
 import { isInDateRange } from '../../utils/dateRange'
 import { useRoleSystem } from '../../context/roleSystem/RoleSystemContext'
+import WorkflowGuide from '../../components/WorkflowGuide'
 
 function formatPkr(value) {
   return new Intl.NumberFormat('en-PK').format(value)
@@ -113,6 +114,15 @@ export default function OwnerDashboardPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8">
+      <WorkflowGuide
+        title="CEO control flow"
+        items={[
+          { label: '1. Review alerts', description: 'Check critical flags first so suspicious drivers, trucks, or consignments are not missed.' },
+          { label: '2. Approve records', description: 'Open approvals to clear pending drivers and trucks for daily operations.' },
+          { label: '3. Watch money', description: 'Use accounts and analytics to confirm paid, pending, and held revenue.' },
+        ]}
+      />
+
       <section className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>

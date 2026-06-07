@@ -191,6 +191,20 @@ export default function AppLayout() {
           })}
         </nav>
 
+        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-[11px] font-extrabold uppercase text-slate-500">Signed in as</p>
+          <p className="mt-1 text-sm font-extrabold text-blue-950">
+            {ROLE_LABELS[currentUser?.role] || currentUser?.role || 'User'}
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/app/profile')}
+            className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline"
+          >
+            <span className="material-symbols-outlined text-base">manage_accounts</span>
+            Profile settings
+          </button>
+        </div>
       </aside>
 
       {isMobileMenuOpen ? (
@@ -322,10 +336,10 @@ export default function AppLayout() {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider ${
+                    className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold uppercase ${
                       isActive
                         ? 'bg-primary text-on-primary'
-                        : 'bg-surface-container-low text-on-surface-variant'
+                        : 'border border-slate-200 bg-white text-slate-700'
                     }`}
                   >
                     {item.label}

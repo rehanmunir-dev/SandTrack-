@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import SectionCard from '../../../components/common/SectionCard'
+import WorkflowGuide from '../../../components/WorkflowGuide'
 import { useRoleSystem } from '../../../context/roleSystem/RoleSystemContext'
 import { formatPKR } from '../../../utils/formatCurrency'
 
@@ -152,6 +153,14 @@ export default function AccountantDashboardPage() {
   return (
     <div className="space-y-6">
       <SectionCard title="Accountant Dashboard" subtitle="Finance overview with date-sorted ledger activity.">
+        <WorkflowGuide
+          title="Accountant flow"
+          items={[
+            { label: '1. Confirm arrival', description: 'Review consignments that reached the delivery stage.' },
+            { label: '2. Update payment', description: 'Mark cash payments or attach proof for bank transfer payments.' },
+            { label: '3. Close ledger', description: 'Close the ledger only after delivery and payment are verified.' },
+          ]}
+        />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Card label="Total Revenue" value={formatPKR(accountantSummary.totalRevenue)} />
           <Card label="Pending Payments" value={accountantSummary.pendingPayments} tone="text-secondary" />

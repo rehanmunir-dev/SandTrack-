@@ -1,5 +1,6 @@
 import SectionCard from '../../../components/common/SectionCard'
 import StatusBadge from '../../../components/common/StatusBadge'
+import WorkflowGuide from '../../../components/WorkflowGuide'
 import { useRoleSystem } from '../../../context/roleSystem/RoleSystemContext'
 
 export default function WatchmanDashboardPage() {
@@ -10,6 +11,14 @@ export default function WatchmanDashboardPage() {
   return (
     <div className="space-y-6">
       <SectionCard title="Watchman Dashboard" subtitle="Gate verification and scan monitoring.">
+        <WorkflowGuide
+          title="Gate flow"
+          items={[
+            { label: '1. Scan QR', description: 'Use the camera scanner and confirm the consignment details.' },
+            { label: '2. Inspect', description: 'Check driver, truck number, material, and destination before release.' },
+            { label: '3. Clear or flag', description: 'Clear the gate only if everything matches. Flag any suspicious issue.' },
+          ]}
+        />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="dashboard-stat" style={{ '--stat-accent': '#2563eb' }}>
             <p className="dashboard-stat-label">Recent Scans</p>

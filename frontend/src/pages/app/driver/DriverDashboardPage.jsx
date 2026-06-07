@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import SectionCard from '../../../components/common/SectionCard'
 import StatusBadge from '../../../components/StatusBadge'
+import WorkflowGuide from '../../../components/WorkflowGuide'
 import { useAuth } from '../../../context/AuthContext'
 import { useRoleSystem } from '../../../context/roleSystem/RoleSystemContext'
 
@@ -79,6 +80,14 @@ export default function DriverDashboardPage() {
       )}
       
       <SectionCard title="Driver Dashboard" subtitle="One trip at a time. Show the assigned QR at the gate.">
+        <WorkflowGuide
+          title="Driver flow"
+          items={[
+            { label: '1. Open QR', description: 'Keep the QR visible before reaching the security gate.' },
+            { label: '2. Match truck', description: 'Make sure your truck and destination details are correct.' },
+            { label: '3. Gate scan', description: 'Show the QR to the watchman and wait for gate clearance.' },
+          ]}
+        />
         {currentTrip && !sessionExpired ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
