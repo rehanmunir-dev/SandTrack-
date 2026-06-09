@@ -11,23 +11,40 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import SectionCard from '../../../components/common/SectionCard'
 import WorkflowGuide from '../../../components/WorkflowGuide'
 import { useRoleSystem } from '../../../context/roleSystem/RoleSystemContext'
 import { formatPKR } from '../../../utils/formatCurrency'
 
 function Card({ label, value, tone = 'text-primary' }) {
-  const accent = tone === 'text-secondary'
-    ? '#f59e0b'
+  const styles = tone === 'text-secondary'
+    ? {
+        accent: 'bg-secondary',
+        ring: 'border-secondary/20 bg-secondary/10',
+        value: 'text-secondary',
+      }
     : tone === 'text-tertiary'
-      ? '#059669'
+      ? {
+          accent: 'bg-tertiary',
+          ring: 'border-tertiary/20 bg-tertiary/10',
+          value: 'text-tertiary',
+        }
       : tone === 'text-error'
-        ? '#dc2626'
-        : '#041534'
+        ? {
+            accent: 'bg-error',
+            ring: 'border-error/20 bg-error/10',
+            value: 'text-error',
+          }
+        : {
+            accent: 'bg-primary',
+            ring: 'border-primary/20 bg-primary/10',
+            value: 'text-primary',
+          }
+
   return (
-    <div className="dashboard-stat" style={{ '--stat-accent': accent }}>
-      <p className="dashboard-stat-label">{label}</p>
-      <p className={`dashboard-stat-value ${tone}`}>{value}</p>
+    <div className={`relative overflow-hidden rounded-2xl border p-4 shadow-sm ${styles.ring}`}>
+      <div className={`absolute left-0 top-0 h-full w-1 ${styles.accent}`} />
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-on-surface-variant">{label}</p>
+      <p className={`mt-3 font-headline text-2xl font-black leading-tight ${styles.value}`}>{value}</p>
     </div>
   )
 }
@@ -45,6 +62,17 @@ function paymentStatusLabel(status) {
   if (normalized === 'held' || normalized === 'flagged') return 'Held'
   if (normalized === 'overdue') return 'Overdue'
   return 'Pending'
+}
+
+function statusPillClass(status) {
+  const normalized = String(status || 'pending').toLowerCase()
+  if (normalized === 'paid' || normalized === 'verified') {
+    return 'border-tertiary/20 bg-tertiary/10 text-tertiary'
+  }
+  if (normalized === 'held' || normalized === 'flagged' || normalized === 'overdue') {
+    return 'border-error/20 bg-error/10 text-error'
+  }
+  return 'border-secondary/20 bg-secondary/10 text-secondary'
 }
 
 export default function AccountantDashboardPage() {
@@ -137,6 +165,15 @@ export default function AccountantDashboardPage() {
     }))
   }, [consignments])
 
+  const accountantQueues = useMemo(() => ({
+    arrived: consignments.filter((item) => String(item.status).toUpperCase() === 'ARRIVED').length,
+    deliveryReview: consignments.filter((item) => ['ARRIVED', 'DELIVERY_PENDING_VERIFICATION'].includes(String(item.status).toUpperCase())).length,
+    pendingPayments: payments.filter((item) => paymentStatusLabel(item.status) === 'Pending').length,
+    verifiedPayments: payments.filter((item) => paymentStatusLabel(item.status) === 'Paid').length,
+    ledgerClosing: consignments.filter((item) => String(item.status).toUpperCase() === 'DELIVERED').length,
+    closedLedgers: consignments.filter((item) => String(item.status).toUpperCase() === 'CLOSED').length,
+  }), [consignments, payments])
+
   function formatDateTime(value) {
     if (!value) {
       return 'N/A'
@@ -152,26 +189,61 @@ export default function AccountantDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <SectionCard title="Accountant Dashboard" subtitle="Finance overview with date-sorted ledger activity.">
-        <WorkflowGuide
-          title="Accountant flow"
-          items={[
-            { label: '1. Confirm arrival', description: 'Review consignments that reached the delivery stage.' },
-            { label: '2. Update payment', description: 'Mark cash payments or attach proof for bank transfer payments.' },
-            { label: '3. Close ledger', description: 'Close the ledger only after delivery and payment are verified.' },
-          ]}
-        />
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card label="Total Revenue" value={formatPKR(accountantSummary.totalRevenue)} />
-          <Card label="Pending Payments" value={accountantSummary.pendingPayments} tone="text-secondary" />
-          <Card label="Verified Payments" value={accountantSummary.verifiedPayments} tone="text-tertiary" />
-          <Card label="Flagged Payments" value={accountantSummary.flaggedPayments} tone="text-error" />
+      <section className="overflow-hidden rounded-2xl border border-outline-variant/15 bg-gradient-to-br from-primary/10 via-surface-container-lowest to-tertiary/10 shadow-sm">
+        <div className="grid gap-5 p-5 xl:grid-cols-[1.1fr_1.4fr] xl:items-stretch">
+          <div className="flex flex-col justify-between gap-5">
+            <div className="space-y-3">
+              <div className="inline-flex rounded-full border border-tertiary/20 bg-tertiary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-tertiary">
+                Finance Control
+              </div>
+              <div>
+                <h1 className="font-headline text-2xl font-black text-on-surface">Accountant Dashboard</h1>
+                <p className="mt-1 max-w-xl text-sm font-medium text-on-surface-variant">
+                  Finance overview with date-sorted ledger activity.
+                </p>
+              </div>
+            </div>
+
+            <WorkflowGuide
+              title="Accountant flow"
+              items={[
+                { label: '1. Confirm arrival', description: 'Review consignments that reached the delivery stage.' },
+                { label: '2. Update payment', description: 'Mark cash payments or attach proof for bank transfer payments.' },
+                { label: '3. Close ledger', description: 'Close the ledger only after delivery and payment are verified.' },
+              ]}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Card label="Total Revenue" value={formatPKR(accountantSummary.totalRevenue)} />
+            <Card label="Pending Payments" value={accountantSummary.pendingPayments} tone="text-secondary" />
+            <Card label="Verified Payments" value={accountantSummary.verifiedPayments} tone="text-tertiary" />
+            <Card label="Flagged Payments" value={accountantSummary.flaggedPayments} tone="text-error" />
+          </div>
         </div>
-      </SectionCard>
+      </section>
+
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+        <QueueMetric label="Arrived" value={accountantQueues.arrived} />
+        <QueueMetric label="Delivery Review" value={accountantQueues.deliveryReview} />
+        <QueueMetric label="Pending Payments" value={accountantQueues.pendingPayments} tone="text-secondary" />
+        <QueueMetric label="Verified Payments" value={accountantQueues.verifiedPayments} tone="text-tertiary" />
+        <QueueMetric label="Ledger Close" value={accountantQueues.ledgerClosing} tone="text-primary" />
+        <QueueMetric label="Closed Ledgers" value={accountantQueues.closedLedgers} tone="text-tertiary" />
+      </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <SectionCard title="Revenue Trend" subtitle="Verified payment value from the last 7 days.">
-          <div className="h-[260px]">
+        <section className="rounded-2xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="font-headline text-xl font-black text-on-surface">Revenue Trend</h2>
+              <p className="text-xs font-medium text-on-surface-variant">Verified payment value from the last 7 days.</p>
+            </div>
+            <span className="rounded-full border border-tertiary/20 bg-tertiary/10 px-3 py-1 text-xs font-black text-tertiary">
+              7 Days
+            </span>
+          </div>
+          <div className="h-[280px] rounded-xl border border-outline-variant/10 bg-surface-container-low p-3">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={revenueTrendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.25)" />
@@ -182,32 +254,53 @@ export default function AccountantDashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </SectionCard>
+        </section>
 
-        <SectionCard title="Payment Status Mix" subtitle="Live payment queue split for accountant action.">
-          <div className="h-[260px]">
-            {paymentStatusData.some((item) => item.count > 0) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={paymentStatusData} dataKey="count" nameKey="label" innerRadius={55} outerRadius={82} paddingAngle={3}>
-                    {paymentStatusData.map((entry) => (
-                      <Cell key={entry.status} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-full items-center justify-center text-sm font-semibold text-on-surface-variant">
-                No payment data yet.
-              </div>
-            )}
+        <section className="rounded-2xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
+          <div className="mb-4">
+            <h2 className="font-headline text-xl font-black text-on-surface">Payment Status Mix</h2>
+            <p className="text-xs font-medium text-on-surface-variant">Live payment queue split for accountant action.</p>
           </div>
-        </SectionCard>
+          <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr] lg:items-center">
+            <div className="h-[260px] rounded-xl border border-outline-variant/10 bg-surface-container-low p-3">
+              {paymentStatusData.some((item) => item.count > 0) ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={paymentStatusData} dataKey="count" nameKey="label" innerRadius={58} outerRadius={86} paddingAngle={3}>
+                      {paymentStatusData.map((entry) => (
+                        <Cell key={entry.status} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm font-semibold text-on-surface-variant">
+                  No payment data yet.
+                </div>
+              )}
+            </div>
+            <div className="grid gap-2">
+              {paymentStatusData.map((item) => (
+                <div key={item.status} className="flex items-center justify-between rounded-xl border border-outline-variant/15 bg-surface-container-low p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-xs font-black uppercase tracking-[0.12em] text-on-surface-variant">{item.label}</span>
+                  </div>
+                  <span className="font-headline text-lg font-black text-on-surface">{item.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </section>
 
-      <SectionCard title="Delivery Queue Breakdown" subtitle="Consignment lifecycle states that drive accounting work.">
-        <div className="h-[240px]">
+      <section className="rounded-2xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
+        <div className="mb-4">
+          <h2 className="font-headline text-xl font-black text-on-surface">Delivery Queue Breakdown</h2>
+          <p className="text-xs font-medium text-on-surface-variant">Consignment lifecycle states that drive accounting work.</p>
+        </div>
+        <div className="h-[260px] rounded-xl border border-outline-variant/10 bg-surface-container-low p-3">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={deliveryQueueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.25)" />
@@ -218,33 +311,54 @@ export default function AccountantDashboardPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </SectionCard>
+      </section>
 
-      <SectionCard title="Latest Payments" subtitle="Pulled from ledger data and sorted by latest date.">
+      <section className="rounded-2xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="font-headline text-xl font-black text-on-surface">Latest Payments</h2>
+            <p className="text-xs font-medium text-on-surface-variant">Pulled from ledger data and sorted by latest date.</p>
+          </div>
+          <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-black text-primary">
+            Latest {latestPayments.length}
+          </span>
+        </div>
         <div className="space-y-3 text-sm">
           {latestPayments.map((payment) => (
-            <div key={payment.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:bg-slate-50">
+            <div key={payment.id} className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:bg-surface-container">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-headline text-base font-bold text-on-surface">{payment.ledgerRef}</p>
-                  <p className="text-xs text-on-surface-variant">Destination: {payment.destination}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant">Ledger Reference</p>
+                  <p className="mt-1 font-headline text-base font-black text-on-surface">{payment.ledgerRef}</p>
+                  <p className="mt-1 text-xs font-medium text-on-surface-variant">Destination: {payment.destination}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-semibold text-on-surface-variant">{formatDateTime(payment.createdAt)}</p>
-                  <p className="mt-1 text-sm font-bold text-primary">PKR {payment.amount}</p>
+                  <p className="text-xs font-bold text-on-surface-variant">{formatDateTime(payment.createdAt)}</p>
+                  <p className="mt-1 font-headline text-lg font-black text-primary">PKR {payment.amount}</p>
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{payment.method || 'Cash'}</span>
-                <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{payment.status}</span>
+                <span className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-black text-primary">{payment.method || 'Cash'}</span>
+                <span className={`rounded-full border px-3 py-1 text-xs font-black ${statusPillClass(payment.status)}`}>{payment.status}</span>
               </div>
             </div>
           ))}
           {!latestPayments.length ? (
-            <p className="text-sm text-on-surface-variant">No payments found.</p>
+            <div className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-6 text-center text-sm font-semibold text-on-surface-variant">
+              No payments found.
+            </div>
           ) : null}
         </div>
-      </SectionCard>
+      </section>
+    </div>
+  )
+}
+
+function QueueMetric({ label, value, tone = 'text-primary' }) {
+  return (
+    <div className="rounded-2xl border border-outline-variant/15 bg-surface-container-lowest p-4 shadow-sm">
+      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-on-surface-variant">{label}</p>
+      <p className={`mt-2 font-headline text-2xl font-black ${tone}`}>{value}</p>
     </div>
   )
 }

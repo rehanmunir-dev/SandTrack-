@@ -6,6 +6,7 @@ import EmptyState from '../../components/owner/EmptyState'
 import { useOwnerData } from '../../context/owner/OwnerContext'
 import { getConsignmentFullDetailAPI } from '../../services/api'
 import StatusBadge from '../../components/StatusBadge'
+import StatusTimeline from '../../components/StatusTimeline'
 
 export default function OwnerConsignmentDetailPage() {
   const { id } = useParams()
@@ -45,14 +46,35 @@ export default function OwnerConsignmentDetailPage() {
   const gateLogs = fullDetail?.gateLogs || []
   const ledgerEntries = fullDetail?.ledgerEntries || []
   const activityLogs = fullDetail?.activityLogs || []
+  const latestPayment = payments[0]
+  const latestLedger = ledgerEntries[0]
   const terminal = terminals.find((item) => item.id === consignment.terminalId)
   const creator = users.find((item) => item.id === consignment.createdByUserId)
   const relatedAlerts = alerts.filter((alert) => alert.consignmentId === consignment.id)
 
   return (
     <div className="space-y-6">
+      <section className="rounded-2xl border border-outline-variant/15 bg-gradient-to-br from-primary/10 via-surface-container-lowest to-secondary/10 p-5 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">CEO Command Center</p>
+            <h1 className="mt-2 font-headline text-2xl font-black text-on-surface">{consignment.receiptId}</h1>
+            <p className="mt-1 text-sm font-medium text-on-surface-variant">
+              Driver, truck, QR, gate, payment, ledger, and activity visibility in one place.
+            </p>
+          </div>
+          <StatusBadge status={backendConsignment?.status || consignment.logisticsStatus} size="lg" />
+        </div>
+      </section>
+
+      <StatusTimeline
+        status={backendConsignment?.status || consignment.logisticsStatus}
+        paymentStatus={latestPayment?.status}
+        hasQr={Boolean(backendConsignment?.qr_token || consignment.qrCode)}
+      />
+
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <DetailCard title="Receipt Summary">
+        <DetailCard title="Consignment Summary">
           <div className="space-y-2 text-sm">
             <p><span className="font-semibold">Receipt:</span> {consignment.receiptId}</p>
             <p><span className="font-semibold">Vehicle:</span> {consignment.vehicleNo}</p>
@@ -84,7 +106,7 @@ export default function OwnerConsignmentDetailPage() {
           </div>
         </DetailCard>
 
-        <DetailCard title="Linked Entities">
+        <DetailCard title="Driver / Truck">
           <div className="space-y-2 text-sm">
             <p><span className="font-semibold">Terminal:</span> {terminal?.name || 'N/A'}</p>
             <p><span className="font-semibold">Handled By:</span> {creator?.name || 'N/A'}</p>
@@ -107,7 +129,10 @@ export default function OwnerConsignmentDetailPage() {
           <ListRows rows={payments} empty="No payment record." render={(payment) => (
             <div>
               <p className="font-semibold">PKR {payment.amount}</p>
-              <p className="text-xs text-on-surface-variant">{payment.payment_method} - {payment.status}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-on-surface-variant">
+                <span>{payment.payment_method}</span>
+                <StatusBadge status={payment.status} size="sm" />
+              </div>
             </div>
           )} />
         </DetailCard>
@@ -116,14 +141,16 @@ export default function OwnerConsignmentDetailPage() {
           <ListRows rows={ledgerEntries} empty="No ledger entries." render={(entry) => (
             <div>
               <p className="font-semibold">{entry.entry_type} - PKR {entry.amount}</p>
-              <p className="text-xs text-on-surface-variant">{entry.status}</p>
+              <div className="mt-1">
+                <StatusBadge status={entry.status} size="sm" />
+              </div>
             </div>
           )} />
         </DetailCard>
       </section>
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <DetailCard title="Lifecycle Timeline">
+        <DetailCard title="Gate Logs">
           <ListRows rows={gateLogs} empty="No gate logs." render={(log) => (
             <div>
               <p className="font-semibold">{log.scan_result} by {log.watchman_name || 'Watchman'}</p>
@@ -143,13 +170,18 @@ export default function OwnerConsignmentDetailPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <DetailCard title="Evidence Placeholders">
+        <DetailCard title="Finance Summary">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {consignment.evidencePhotos.map((label) => (
-              <div key={label} className="rounded-lg border border-outline-variant/20 bg-surface-container-low p-4 text-sm text-on-surface-variant">
-                {label}
-              </div>
-            ))}
+            <div className="rounded-lg border border-outline-variant/20 bg-surface-container-low p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Latest Payment</p>
+              <p className="mt-2 font-headline text-xl font-black text-primary">PKR {latestPayment?.amount || 0}</p>
+              <div className="mt-2"><StatusBadge status={latestPayment?.status || 'PENDING'} size="sm" /></div>
+            </div>
+            <div className="rounded-lg border border-outline-variant/20 bg-surface-container-low p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Ledger</p>
+              <p className="mt-2 font-headline text-xl font-black text-primary">{latestLedger?.entry_type || 'Not closed'}</p>
+              <div className="mt-2"><StatusBadge status={latestLedger?.status || 'OPEN'} size="sm" /></div>
+            </div>
           </div>
         </DetailCard>
 

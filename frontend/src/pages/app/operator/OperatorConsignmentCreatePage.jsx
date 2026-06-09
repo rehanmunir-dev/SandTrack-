@@ -85,13 +85,17 @@ export default function OperatorConsignmentCreatePage() {
   return (
     <div className="space-y-6">
       <SectionCard title="Create Consignment" subtitle="Operator creates dispatch and generates a unique QR code.">
-        <form onSubmit={handleSubmit} className="max-w-md space-y-3">
+        <div className="mb-4 rounded-xl border border-primary/15 bg-primary/10 p-4 text-sm font-medium text-primary">
+          Only CEO-approved, active, and currently free drivers/trucks are shown here. If a driver or truck is missing, check approval, active status, or whether it already has an open consignment.
+        </div>
+        <form onSubmit={handleSubmit} className="max-w-2xl space-y-3">
           <div>
             <label className="block text-xs font-semibold text-on-surface-variant mb-1">Driver</label>
             <select required name="driverId" value={form.driverId} onChange={handleChange} className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm">
               <option value="">Select driver</option>
               {assignableDrivers.map((driver) => <option key={driver.id} value={driver.id}>{driver.name}</option>)}
             </select>
+            {!assignableDrivers.length ? <p className="mt-2 text-xs font-bold text-secondary">No available drivers right now. Approve one or wait until an active trip closes.</p> : null}
           </div>
           <div>
             <label className="block text-xs font-semibold text-on-surface-variant mb-1">Truck</label>
@@ -99,6 +103,7 @@ export default function OperatorConsignmentCreatePage() {
               <option value="">Select truck</option>
               {assignableTrucks.map((truck) => <option key={truck.id} value={truck.id}>{truck.vehicleNo}</option>)}
             </select>
+            {!assignableTrucks.length ? <p className="mt-2 text-xs font-bold text-secondary">No available trucks right now. Approve one or wait until an active trip closes.</p> : null}
           </div>
           <div>
             <label className="block text-xs font-semibold text-on-surface-variant mb-1">Net Weight (Tons)</label>
@@ -130,7 +135,7 @@ export default function OperatorConsignmentCreatePage() {
             <label className="block text-xs font-semibold text-on-surface-variant mb-1">Notes (Optional)</label>
             <input name="notes" value={form.notes} onChange={handleChange} placeholder="Enter optional notes" className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm" />
           </div>
-          <button type="submit" className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white">Generate QR & Create</button>
+          <button type="submit" className="w-full rounded-xl bg-primary px-4 py-4 text-sm font-bold text-white shadow-sm">Generate QR & Create</button>
         </form>
         {error ? <p className="mt-3 rounded-lg border border-error bg-error-container px-3 py-2 text-sm text-on-error-container">{error}</p> : null}
       </SectionCard>

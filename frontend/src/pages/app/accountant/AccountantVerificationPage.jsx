@@ -13,10 +13,25 @@ export default function AccountantVerificationPage() {
 
   return (
     <div className="space-y-6">
+      <section className="rounded-2xl border border-outline-variant/15 bg-gradient-to-br from-primary/10 via-surface-container-lowest to-tertiary/10 p-5 shadow-sm">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-tertiary">Accountant Work Queues</p>
+        <h1 className="mt-2 font-headline text-2xl font-black text-on-surface">Verification Center</h1>
+        <p className="mt-1 text-sm font-medium text-on-surface-variant">
+          Verify delivery, confirm payment, and close ledgers without changing the order lifecycle manually.
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
+          <Metric label="In Transit" value={inTransit.length} />
+          <Metric label="Arrived" value={arrived.length} />
+          <Metric label="Payments" value={pending.length} />
+          <Metric label="Delivered" value={delivered.length} />
+          <Metric label="Flagged" value={flagged.length} tone="text-error" />
+        </div>
+      </section>
+
       <SectionCard title="Payment Verification" subtitle="Verify or flag pending payment records.">
         <div className="space-y-3">
           {pending.map((payment) => (
-            <div key={payment.id} className="rounded-lg border border-outline-variant/20 bg-surface-container-low p-4 text-sm">
+            <div key={payment.id} className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-4 text-sm shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-on-surface">{payment.consignmentId}</p>
                 <StatusBadge status={payment.status} />
@@ -28,7 +43,12 @@ export default function AccountantVerificationPage() {
               </div>
             </div>
           ))}
-          {!pending.length ? <p className="text-sm text-on-surface-variant">No pending payments.</p> : null}
+          {!pending.length ? (
+            <div className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-6 text-center">
+              <p className="text-sm font-bold text-on-surface">No payments pending.</p>
+              <p className="mt-1 text-sm text-on-surface-variant">All clear for now.</p>
+            </div>
+          ) : null}
         </div>
       </SectionCard>
 
@@ -50,21 +70,38 @@ function Queue({ title, items, actionLabel, onAction }) {
       <h3 className="font-headline text-base font-bold text-on-surface">{title}</h3>
       <div className="mt-3 space-y-3">
         {items.map((item) => (
-          <div key={item.id} className="rounded-lg border border-outline-variant/15 bg-surface-container-low p-3 text-sm">
+          <div key={item.id} className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-3 text-sm shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <p className="font-semibold">{item.consignmentId}</p>
               <StatusBadge status={item.status} />
             </div>
             <p className="mt-1 text-xs text-on-surface-variant">{item.destination} - {item.netWeight} tons</p>
+            <p className="mt-2 text-xs font-bold text-primary">
+              Next action: {actionLabel || 'Review issue'}
+            </p>
             {actionLabel && onAction ? (
-              <button type="button" onClick={() => onAction(item.id)} className="mt-3 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white">
+              <button type="button" onClick={() => onAction(item.id)} className="mt-3 w-full rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white sm:w-auto">
                 {actionLabel}
               </button>
             ) : null}
           </div>
         ))}
-        {!items.length ? <p className="text-xs text-on-surface-variant">No records.</p> : null}
+        {!items.length ? (
+          <div className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-4 text-center">
+            <p className="text-xs font-bold text-on-surface">No records.</p>
+            <p className="mt-1 text-xs text-on-surface-variant">This queue is clear.</p>
+          </div>
+        ) : null}
       </div>
+    </div>
+  )
+}
+
+function Metric({ label, value, tone = 'text-primary' }) {
+  return (
+    <div className="rounded-xl border border-outline-variant/15 bg-white/70 p-3 shadow-sm">
+      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-on-surface-variant">{label}</p>
+      <p className={`mt-1 font-headline text-2xl font-black ${tone}`}>{value}</p>
     </div>
   )
 }

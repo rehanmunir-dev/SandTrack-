@@ -20,6 +20,8 @@ function toPaymentMethodFormValue(method) {
 export default function AccountantLedgerPage() {
   const { payments, consignments, drivers, trucks, ledgerEntries, updatePaymentDetails, closeLedger } = useRoleSystem()
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [notice, setNotice] = useState('')
+  const [closingLedgerId, setClosingLedgerId] = useState(null)
   const [form, setForm] = useState({
     paymentId: '',
     method: 'Cash',
@@ -38,6 +40,7 @@ export default function AccountantLedgerPage() {
 
         return {
           id: payment.id,
+          consignmentDbId: consignment?.id || payment.consignmentDbId || null,
           ledgerRef: consignment?.consignmentId || payment.consignmentId,
           driverName: driver?.name || 'N/A',
           truckNo: truck?.vehicleNo || 'N/A',
@@ -134,6 +137,25 @@ export default function AccountantLedgerPage() {
     reader.readAsDataURL(file)
   }
 
+  async function handleCloseLedger(row) {
+    if (!row?.consignmentDbId) {
+      setNotice('Consignment record was not found for this payment. Please refresh and try again.')
+      return
+    }
+
+    setClosingLedgerId(row.id)
+    setNotice('')
+
+    try {
+      await closeLedger(row.consignmentDbId)
+      setNotice('Ledger closed successfully.')
+    } catch (error) {
+      setNotice(error.response?.data?.message || 'Ledger could not be closed.')
+    } finally {
+      setClosingLedgerId(null)
+    }
+  }
+
   function formatDateTime(value) {
     if (!value) {
       return 'N/A'
@@ -207,8 +229,13 @@ export default function AccountantLedgerPage() {
                       Update Payment
                     </button>
                     {row.deliveryStatus === 'Delivered' && row.paymentStatus === PAYMENT_STATUS.PAID ? (
-                      <button type="button" onClick={() => closeLedger(consignments.find((item) => item.consignmentId === row.ledgerRef)?.id)} className="rounded border border-primary px-2 py-1 text-xs font-semibold text-primary">
-                        Close Ledger
+                      <button
+                        type="button"
+                        onClick={() => handleCloseLedger(row)}
+                        disabled={closingLedgerId === row.id}
+                        className="rounded border border-primary px-2 py-1 text-xs font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {closingLedgerId === row.id ? 'Closing...' : 'Close Ledger'}
                       </button>
                     ) : null}
                   </div>
@@ -219,6 +246,12 @@ export default function AccountantLedgerPage() {
           </table>
         </div>
       </SectionCard>
+
+      {notice ? (
+        <p className="rounded-xl border border-primary/15 bg-primary/10 px-4 py-3 text-xs font-bold text-primary shadow-sm">
+          {notice}
+        </p>
+      ) : null}
 
       {isFormOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4">

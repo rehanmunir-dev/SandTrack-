@@ -24,7 +24,7 @@ export default function ScannerPage() {
 
   // Document Title
   useEffect(() => {
-    document.title = 'SandTrack — Gate Scanner'
+    document.title = 'SandTrack - Gate Scanner'
   }, [])
 
   // Keyboard Enter key shortcut to verify
@@ -365,7 +365,7 @@ export default function ScannerPage() {
                       className="py-4 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-base sm:text-lg flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 hover:bg-emerald-400 transition-all active:scale-[0.98] disabled:opacity-50"
                     >
                       <span className="material-symbols-outlined font-extrabold text-2xl">check_circle</span>
-                      CLEAR GATE
+                      {isPending ? 'CLEARING...' : 'CLEAR GATE'}
                     </button>
                     <button
                       type="button"
@@ -405,6 +405,7 @@ export default function ScannerPage() {
                       setResult(null)
                       setTokenInput('')
                       setGateCleared(false)
+                      setMode('camera')
                     }}
                     className="px-6 py-2.5 rounded-xl bg-white text-emerald-950 font-bold hover:bg-slate-100 transition-colors"
                   >
@@ -436,6 +437,7 @@ export default function ScannerPage() {
                     onClick={() => {
                       setResult(null)
                       setTokenInput('')
+                      setMode('camera')
                     }}
                     className="app-btn-secondary px-4 py-2 bg-slate-850 border-slate-700 text-slate-300"
                   >

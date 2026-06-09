@@ -2,8 +2,16 @@ import React from 'react'
 
 const BADGE_MAP = {
   SCAN_PENDING: {
-    classes: 'border-slate-300 bg-slate-100 text-slate-700',
+    classes: 'border-blue-200 bg-blue-50 text-blue-800',
     label: 'Scan Pending',
+  },
+  PAYMENT_PENDING: {
+    classes: 'border-amber-200 bg-amber-50 text-amber-800',
+    label: 'Payment Pending',
+  },
+  PAYMENT_VERIFIED: {
+    classes: 'border-emerald-700 bg-emerald-700 text-white',
+    label: 'Payment Verified',
   },
   PENDING: {
     classes: 'border-amber-200 bg-amber-50 text-amber-800',
@@ -14,11 +22,11 @@ const BADGE_MAP = {
     label: 'Pending',
   },
   IN_TRANSIT: {
-    classes: 'border-blue-200 bg-blue-50 text-blue-800',
-    label: 'In Transit',
+    classes: 'border-orange-200 bg-orange-50 text-orange-800',
+    label: 'On The Way',
   },
   ARRIVED: {
-    classes: 'border-cyan-200 bg-cyan-50 text-cyan-800',
+    classes: 'border-violet-200 bg-violet-50 text-violet-800',
     label: 'Arrived',
   },
   DELIVERY_PENDING_VERIFICATION: {
@@ -46,7 +54,7 @@ const BADGE_MAP = {
     label: 'Billed',
   },
   CLOSED: {
-    classes: 'border-slate-300 bg-slate-700 text-white',
+    classes: 'border-emerald-900 bg-emerald-900 text-white',
     label: 'Closed',
   },
   FLAGGED: {

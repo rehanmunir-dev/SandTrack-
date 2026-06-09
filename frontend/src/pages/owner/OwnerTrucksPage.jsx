@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import DateRangeFilterButton from '../../components/common/DateRangeFilterButton'
 import SearchBar from '../../components/owner/SearchBar'
 import EmptyState from '../../components/owner/EmptyState'
@@ -70,6 +70,21 @@ export default function OwnerTrucksPage() {
       `${driver.fullName} ${driver.phone}`.toLowerCase().includes(q)
     )
   }, [driverProfiles, search])
+
+  const linkedTruckCount = useMemo(
+    () => trucks.filter((truck) => driverProfiles.some((driver) => String(driver.assignedTruckId) === String(truck.id))).length,
+    [trucks, driverProfiles]
+  )
+
+  const unassignedDriverCount = useMemo(
+    () => driverProfiles.filter((driver) => !driver.assignedTruckId).length,
+    [driverProfiles]
+  )
+
+  const ownTruckCount = useMemo(
+    () => trucks.filter((truck) => truck.ownershipType === 'own').length,
+    [trucks]
+  )
 
 
   function openCreateDriverModal() {
@@ -204,32 +219,53 @@ export default function OwnerTrucksPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h4 className="font-headline text-lg font-bold">Trucks and Drivers Management</h4>
-            <p className="text-xs text-on-surface-variant">Manage separate truck fleet and driver profiles. One driver can be assigned to multiple trucks.</p>
+      <section className="overflow-hidden rounded-2xl border border-outline-variant/15 bg-gradient-to-br from-primary/10 via-surface-container-lowest to-secondary/10 shadow-sm">
+        <div className="grid gap-4 p-5 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+          <div className="space-y-3">
+            <div className="inline-flex rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-primary">
+              Fleet Control
+            </div>
+            <div>
+              <h4 className="font-headline text-2xl font-black text-on-surface">Trucks and Drivers Management</h4>
+              <p className="mt-1 max-w-2xl text-sm font-medium text-on-surface-variant">
+                Manage separate truck fleet and driver profiles. One driver can be assigned to multiple trucks.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={openCreateTruckModal}
+                className="rounded-lg bg-secondary px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-secondary/90"
+              >
+                Add Truck
+              </button>
+              <button
+                type="button"
+                onClick={openCreateDriverModal}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary/90"
+              >
+                Add Driver
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={openCreateTruckModal}
-              className="rounded-lg bg-secondary px-4 py-2 text-sm font-bold text-white hover:bg-secondary/90 transition-colors"
-            >
-              Add Truck
-            </button>
-            <button
-              type="button"
-              onClick={openCreateDriverModal}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 transition-colors"
-            >
-              Add Driver
-            </button>
+
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              ['Total Trucks', trucks.length],
+              ['Total Drivers', driverProfiles.length],
+              ['Linked Trucks', linkedTruckCount],
+              ['Unassigned Drivers', unassignedDriverCount],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-on-surface-variant">{label}</p>
+                <p className="mt-2 font-headline text-2xl font-black text-primary">{value}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 rounded-xl bg-surface-container-low p-4 md:grid-cols-4">
+      <section className="grid grid-cols-1 gap-3 rounded-2xl border border-outline-variant/15 bg-surface-container-low p-4 shadow-sm md:grid-cols-4">
         <div className="md:col-span-2">
           <SearchBar value={search} onChange={setSearch} placeholder="Search by vehicle or driver" />
         </div>
@@ -242,115 +278,124 @@ export default function OwnerTrucksPage() {
         <DateRangeFilterButton value={dateRange} onChange={setDateRange} label="Custom Date" />
       </section>
 
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* TRUCKS TABLE */}
-        <section className="rounded-xl border border-outline-variant/15 bg-surface-container-lowest shadow-sm">
-          <div className="border-b border-outline-variant/20 p-4">
-            <h4 className="font-headline text-lg font-bold">Trucks Fleet</h4>
-            <p className="text-xs text-on-surface-variant">{filteredTrucks.length} truck(s) found</p>
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <section className="rounded-2xl border border-outline-variant/15 bg-surface-container-lowest p-4 shadow-sm">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h4 className="font-headline text-xl font-black text-on-surface">Trucks Fleet</h4>
+              <p className="text-xs font-medium text-on-surface-variant">{filteredTrucks.length} truck(s) found</p>
+            </div>
+            <div className="rounded-full border border-secondary/20 bg-secondary/10 px-3 py-1 text-xs font-black text-secondary">
+              {ownTruckCount} Own Truck(s)
+            </div>
           </div>
 
           {filteredTrucks.length === 0 ? (
             <div className="p-4"><EmptyState title="No trucks found" subtitle="Change filters and try again." /></div>
           ) : (
-            <div className="app-table-scroll">
-              <table className="app-table text-left text-sm">
-                <thead className="bg-surface-container-low text-on-surface-variant">
-                  <tr>
-                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest">Vehicle</th>
-                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest">Type</th>
-                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest">Drivers</th>
-                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/20">
-                  {filteredTrucks.map((truck) => {
-                    const assignedDrivers = getDriversForTruck(truck.id)
-                    return (
-                      <tr key={truck.id} className="transition-colors hover:bg-surface-container-low">
-                        <td className="px-4 py-3 font-headline font-bold text-primary">{truck.vehicleNo}</td>
-                        <td className="px-4 py-3 text-xs font-semibold uppercase text-on-surface-variant">{truck.ownershipType}</td>
-                        <td className="px-4 py-3">
-                          {assignedDrivers.length > 0 ? (
-                            <div className="space-y-1">
-                              {assignedDrivers.map((driver) => (
-                                <p key={driver.id} className="text-xs text-on-surface">
-                                  • {driver.fullName}
-                                </p>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-xs text-on-surface-variant">No drivers</p>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <button
-                            type="button"
-                            onClick={() => openTruckEditModal(truck)}
-                            className="rounded border border-outline-variant px-2 py-1 text-[11px] font-semibold hover:bg-surface-container-low transition-colors"
-                          >
-                            Edit
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+            <div className="grid gap-3">
+              {filteredTrucks.map((truck) => {
+                const assignedDrivers = getDriversForTruck(truck.id)
+                return (
+                  <article
+                    key={truck.id}
+                    className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-4 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-on-surface-variant">Vehicle</p>
+                        <h5 className="mt-1 font-headline text-xl font-black text-primary">{truck.vehicleNo}</h5>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-primary">
+                          {truck.ownershipType}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => openTruckEditModal(truck)}
+                          className="rounded-lg border border-outline-variant/40 bg-surface-container-lowest px-3 py-2 text-xs font-bold text-on-surface transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-lg border border-outline-variant/15 bg-surface-container-lowest p-3">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant">Assigned Drivers</p>
+                        <span className="rounded-full bg-surface-container px-2 py-1 text-[10px] font-black text-on-surface-variant">
+                          {assignedDrivers.length}
+                        </span>
+                      </div>
+                      {assignedDrivers.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {assignedDrivers.map((driver) => (
+                            <span key={driver.id} className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-bold text-secondary">
+                              {driver.fullName}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs font-medium text-on-surface-variant">No drivers</p>
+                      )}
+                    </div>
+                  </article>
+                )
+              })}
             </div>
           )}
         </section>
 
-        {/* DRIVERS TABLE */}
-        <section className="rounded-xl border border-outline-variant/15 bg-surface-container-lowest shadow-sm">
-          <div className="border-b border-outline-variant/20 p-4">
-            <h4 className="font-headline text-lg font-bold">Driver Profiles</h4>
-            <p className="text-xs text-on-surface-variant">{filteredDrivers.length} driver(s) found</p>
+        <section className="rounded-2xl border border-outline-variant/15 bg-surface-container-lowest p-4 shadow-sm">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h4 className="font-headline text-xl font-black text-on-surface">Driver Profiles</h4>
+              <p className="text-xs font-medium text-on-surface-variant">{filteredDrivers.length} driver(s) found</p>
+            </div>
+            <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-black text-primary">
+              {driverProfiles.length - unassignedDriverCount} Assigned
+            </div>
           </div>
 
           {filteredDrivers.length === 0 ? (
             <div className="p-4"><EmptyState title="No drivers found" subtitle="Create a new driver profile." /></div>
           ) : (
-            <div className="app-table-scroll">
-              <table className="app-table text-left text-sm">
-                <thead className="bg-surface-container-low text-on-surface-variant">
-                  <tr>
-                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest">Name</th>
-                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest">Phone</th>
-                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest">Assigned Truck</th>
-                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/20">
-                  {filteredDrivers.map((driver) => {
-                    const assignedTruck = trucks.find((t) => t.id === driver.assignedTruckId)
-                    return (
-                      <tr key={driver.id} className="transition-colors hover:bg-surface-container-low">
-                        <td className="px-4 py-3 font-semibold text-on-surface">{driver.fullName}</td>
-                        <td className="px-4 py-3 text-sm text-on-surface-variant">{driver.phone}</td>
-                        <td className="px-4 py-3 text-sm">
-                          {assignedTruck ? (
-                            <span className="inline-block rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
-                              {assignedTruck.vehicleNo}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-on-surface-variant">Unassigned</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <button
-                            type="button"
-                            onClick={() => openDriverEditModal(driver)}
-                            className="rounded border border-outline-variant px-2 py-1 text-[11px] font-semibold hover:bg-surface-container-low transition-colors"
-                          >
-                            Edit
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+            <div className="grid gap-3">
+              {filteredDrivers.map((driver) => {
+                const assignedTruck = trucks.find((t) => t.id === driver.assignedTruckId)
+                return (
+                  <article
+                    key={driver.id}
+                    className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-4 transition-all hover:-translate-y-0.5 hover:border-secondary/25 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-on-surface-variant">Driver</p>
+                        <h5 className="mt-1 truncate font-headline text-lg font-black text-on-surface">{driver.fullName}</h5>
+                        <p className="mt-1 text-sm font-semibold text-on-surface-variant">{driver.phone}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openDriverEditModal(driver)}
+                        className="shrink-0 rounded-lg border border-outline-variant/40 bg-surface-container-lowest px-3 py-2 text-xs font-bold text-on-surface transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                      >
+                        Edit
+                      </button>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-outline-variant/15 bg-surface-container-lowest p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant">Assigned Truck</p>
+                      {assignedTruck ? (
+                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">
+                          {assignedTruck.vehicleNo}
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-bold text-on-surface-variant">Unassigned</span>
+                      )}
+                    </div>
+                  </article>
+                )
+              })}
             </div>
           )}
         </section>
@@ -502,7 +547,11 @@ export default function OwnerTrucksPage() {
         </div>
       ) : null}
 
-      {notice ? <p className="text-xs font-medium text-primary">{notice}</p> : null}
+      {notice ? (
+        <p className="rounded-xl border border-primary/15 bg-primary/10 px-4 py-3 text-xs font-bold text-primary shadow-sm">
+          {notice}
+        </p>
+      ) : null}
       <CredentialCard
         isOpen={credModal.isOpen}
         name={credModal.name}

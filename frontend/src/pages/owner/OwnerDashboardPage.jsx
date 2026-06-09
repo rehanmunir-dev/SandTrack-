@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import { OWNER_ROUTES } from '../../constants/owner/routes'
 import { useOwnerData } from '../../context/owner/OwnerContext'
 import KPIStatCard from '../../components/owner/KPIStatCard'
@@ -50,7 +51,7 @@ function isInsidePeriod(isoDate, period) {
 export default function OwnerDashboardPage() {
   const navigate = useNavigate()
   const { consignments, alerts, payments, routeMonitoring, trendSeries } = useOwnerData()
-  const { activityLogs } = useRoleSystem()
+  const { activityLogs, drivers, trucks, scans } = useRoleSystem()
   const [search, setSearch] = useState('')
   const [periodFilter, setPeriodFilter] = useState('daily')
   const [dateRange, setDateRange] = useState({ from: '', to: '' })
@@ -69,6 +70,9 @@ export default function OwnerDashboardPage() {
     const loadedToday = filteredConsignments.filter((item) => item.logisticsStatus === 'loaded' || item.logisticsStatus === 'scan-pending').length
     const onWay = filteredConsignments.filter((item) => item.logisticsStatus === 'on-way' || item.logisticsStatus === 'in-transit').length
     const delivered = filteredConsignments.filter((item) => item.logisticsStatus === 'delivered').length
+    const closed = filteredConsignments.filter((item) => item.logisticsStatus === 'closed' || String(item.status).toUpperCase() === 'CLOSED').length
+    const tonsMoved = filteredConsignments.reduce((sum, item) => sum + Number(item.weightTons || item.netWeight || 0), 0)
+    const pendingApprovals = drivers.filter((item) => item.approvalStatus === 'pending').length + trucks.filter((item) => item.approvalStatus === 'pending').length
 
     const filteredPayments = payments.filter((item) => isInsidePeriod(item.verifiedAt || item.createdAt, periodFilter) && isInDateRange(item.verifiedAt || item.createdAt, dateRange))
     const revenue = filteredPayments
@@ -86,11 +90,14 @@ export default function OwnerDashboardPage() {
       loadedToday,
       onWay,
       delivered,
+      closed,
       revenue,
       pendingReceivables,
       criticalAlerts,
+      tonsMoved,
+      pendingApprovals,
     }
-  }, [filteredConsignments, filteredAlerts, payments, periodFilter, dateRange])
+  }, [filteredConsignments, filteredAlerts, payments, periodFilter, dateRange, drivers, trucks])
 
   const routeKpis = useMemo(() => {
     return {
@@ -111,6 +118,16 @@ export default function OwnerDashboardPage() {
   const priorityAlerts = filteredAlerts
     .filter((alert) => alert.severity === 'critical' || alert.severity === 'warning')
     .slice(0, 4)
+
+  const recentScans = useMemo(
+    () => [...scans].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5),
+    [scans],
+  )
+
+  const latestScan = recentScans[0] || null
+  const latestScanConsignment = latestScan
+    ? consignments.find((item) => String(item.id) === String(latestScan.consignmentId))
+    : null
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8">
@@ -142,34 +159,52 @@ export default function OwnerDashboardPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-5 lg:gap-6 md:grid-cols-2 lg:grid-cols-5">
+      <section className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-5 lg:gap-6 md:grid-cols-2 xl:grid-cols-4">
         <KPIStatCard
-          title="Loaded"
+          title="Today's Dispatches"
           value={dashboardStats.loadedToday}
           tone="primary"
           onClick={() => navigate(`${OWNER_ROUTES.CONSIGNMENTS}?status=scan-pending`)}
         />
         <KPIStatCard
-          title="On Way"
+          title="Active Consignments"
           value={dashboardStats.onWay}
           tone="secondary"
           onClick={() => navigate(`${OWNER_ROUTES.CONSIGNMENTS}?status=in-transit`)}
         />
         <KPIStatCard
-          title="Delivered"
+          title="Pending Approvals"
+          value={dashboardStats.pendingApprovals}
+          tone="secondary"
+          onClick={() => navigate(OWNER_ROUTES.APPROVALS)}
+        />
+        <KPIStatCard
+          title="Pending Payments"
+          value={`PKR ${formatPkr(dashboardStats.pendingReceivables)}`}
+          onClick={() => navigate(`${OWNER_ROUTES.CONSIGNMENTS}?payment=pending`)}
+        />
+        <KPIStatCard
+          title="Delivered Today"
           value={dashboardStats.delivered}
           tone="success"
           onClick={() => navigate(`${OWNER_ROUTES.CONSIGNMENTS}?status=delivered`)}
         />
         <KPIStatCard
-          title="Revenue"
+          title="Revenue Today"
           value={`PKR ${formatPkr(dashboardStats.revenue)}`}
           onClick={() => navigate(OWNER_ROUTES.ANALYTICS)}
         />
         <KPIStatCard
-          title="Pending Receivables"
-          value={`PKR ${formatPkr(dashboardStats.pendingReceivables)}`}
-          onClick={() => navigate(`${OWNER_ROUTES.CONSIGNMENTS}?payment=pending`)}
+          title="Tons Moved Today"
+          value={dashboardStats.tonsMoved}
+          tone="primary"
+          onClick={() => navigate(OWNER_ROUTES.ANALYTICS)}
+        />
+        <KPIStatCard
+          title="Flagged Issues"
+          value={dashboardStats.criticalAlerts}
+          tone="danger"
+          onClick={() => navigate(OWNER_ROUTES.ALERTS)}
         />
       </section>
 
@@ -284,6 +319,51 @@ export default function OwnerDashboardPage() {
         </div>
       </section>
 
+      <section className="rounded-2xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Gate Security</p>
+            <h4 className="mt-1 font-headline text-xl font-black text-on-surface">Latest QR Code Scanned</h4>
+            <p className="text-xs font-medium text-on-surface-variant">Most recent QR verification recorded by the watchman.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(OWNER_ROUTES.GATE_LOGS)}
+            className="rounded-lg border border-outline-variant px-4 py-2 text-sm font-bold text-on-surface transition-colors hover:bg-surface-container-low"
+          >
+            View Gate Logs
+          </button>
+        </div>
+
+        {latestScan ? (
+          <div className="grid gap-5 lg:grid-cols-[auto_1fr]">
+            <div className="flex justify-center rounded-2xl border border-outline-variant/15 bg-white p-4">
+              {latestScan.qrCode ? (
+                <QRCodeSVG value={latestScan.qrCode} size={180} level="H" includeMargin />
+              ) : (
+                <div className="flex h-[180px] w-[180px] items-center justify-center rounded-xl bg-surface-container-low text-center text-xs font-bold text-on-surface-variant">
+                  QR token is no longer available
+                </div>
+              )}
+            </div>
+
+            <div className="grid content-start gap-3 sm:grid-cols-2">
+              <ScanDetail label="Consignment" value={latestScanConsignment?.receiptId || latestScan.consignmentId || 'N/A'} />
+              <ScanDetail label="Scan Result" value={String(latestScan.result || 'N/A').replaceAll('_', ' ')} />
+              <ScanDetail label="Watchman" value={latestScan.actor || 'Watchman'} />
+              <ScanDetail label="Gate" value={latestScan.gateName || 'Main Gate'} />
+              <ScanDetail label="Truck" value={latestScanConsignment?.vehicleNo || 'N/A'} />
+              <ScanDetail label="Scanned At" value={new Date(latestScan.createdAt).toLocaleString()} />
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-6 text-center">
+            <p className="text-sm font-bold text-on-surface">No QR scans recorded yet.</p>
+            <p className="mt-1 text-sm text-on-surface-variant">The latest watchman scan will appear here automatically.</p>
+          </div>
+        )}
+      </section>
+
       <section className="rounded-xl border border-outline-variant/15 bg-surface-container-lowest shadow-sm p-6">
         <div className="mb-4">
           <h4 className="font-headline text-lg font-bold">Global Staff Activity Log</h4>
@@ -328,6 +408,15 @@ export default function OwnerDashboardPage() {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function ScanDetail({ label, value }) {
+  return (
+    <div className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant">{label}</p>
+      <p className="mt-2 break-words text-sm font-black text-on-surface">{value}</p>
     </div>
   )
 }
