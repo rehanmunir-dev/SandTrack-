@@ -48,9 +48,31 @@ function isInsidePeriod(isoDate, period) {
   return createdAt >= now - days * oneDay
 }
 
+function getPeriodDays(period) {
+  return {
+    daily: 1,
+    yesterday: 1,
+    '7d': 7,
+    '14d': 14,
+    '30d': 30,
+  }[period] || 1
+}
+
+function percentChange(current, previous) {
+  if (previous === 0) {
+    return current > 0 ? 100 : 0
+  }
+  return Math.round(((current - previous) / previous) * 100)
+}
+
+function formatChange(value) {
+  if (value === 0) return 'No change'
+  return `${value > 0 ? '+' : ''}${value}% vs previous period`
+}
+
 export default function OwnerDashboardPage() {
   const navigate = useNavigate()
-  const { consignments, alerts, payments, routeMonitoring, trendSeries } = useOwnerData()
+  const { consignments, alerts, payments, routeMonitoring } = useOwnerData()
   const { activityLogs, drivers, trucks, scans } = useRoleSystem()
   const [search, setSearch] = useState('')
   const [periodFilter, setPeriodFilter] = useState('daily')
@@ -98,6 +120,75 @@ export default function OwnerDashboardPage() {
       pendingApprovals,
     }
   }, [filteredConsignments, filteredAlerts, payments, periodFilter, dateRange, drivers, trucks])
+
+  const executiveStats = useMemo(() => {
+    const now = Date.now()
+    const periodMs = getPeriodDays(periodFilter) * 24 * 60 * 60 * 1000
+    const currentStart = periodFilter === 'yesterday' ? now - periodMs * 2 : now - periodMs
+    const currentEnd = periodFilter === 'yesterday' ? now - periodMs : now
+    const previousStart = currentStart - periodMs
+    const previousEnd = currentStart
+
+    const inWindow = (value, start, end) => {
+      const time = new Date(value).getTime()
+      return Number.isFinite(time) && time >= start && time < end
+    }
+
+    const currentConsignments = consignments.filter((item) => inWindow(item.createdAt, currentStart, currentEnd))
+    const previousConsignments = consignments.filter((item) => inWindow(item.createdAt, previousStart, previousEnd))
+    const currentPayments = payments.filter((item) => inWindow(item.verifiedAt || item.createdAt, currentStart, currentEnd))
+    const previousPayments = payments.filter((item) => inWindow(item.verifiedAt || item.createdAt, previousStart, previousEnd))
+
+    const paidAmount = (items) => items
+      .filter((item) => item.status === 'verified' || item.status === 'paid')
+      .reduce((sum, item) => sum + Number(item.amount || 0), 0)
+    const deliveredCount = (items) => items.filter((item) => ['delivered', 'closed'].includes(item.logisticsStatus)).length
+    const tons = (items) => items.reduce((sum, item) => sum + Number(item.weightTons || 0), 0)
+
+    const currentRevenue = paidAmount(currentPayments)
+    const previousRevenue = paidAmount(previousPayments)
+    const currentDelivered = deliveredCount(currentConsignments)
+    const previousDelivered = deliveredCount(previousConsignments)
+    const currentTons = tons(currentConsignments)
+    const previousTons = tons(previousConsignments)
+    const completionRate = currentConsignments.length ? Math.round((currentDelivered / currentConsignments.length) * 100) : 0
+    const paidPayments = currentPayments.filter((item) => item.status === 'verified' || item.status === 'paid').length
+    const collectionRate = currentPayments.length ? Math.round((paidPayments / currentPayments.length) * 100) : 0
+
+    return {
+      dispatchChange: percentChange(currentConsignments.length, previousConsignments.length),
+      revenueChange: percentChange(currentRevenue, previousRevenue),
+      deliveredChange: percentChange(currentDelivered, previousDelivered),
+      tonsChange: percentChange(currentTons, previousTons),
+      completionRate,
+      collectionRate,
+      averageLoad: currentConsignments.length ? currentTons / currentConsignments.length : 0,
+      revenuePerOrder: currentConsignments.length ? currentRevenue / currentConsignments.length : 0,
+    }
+  }, [consignments, payments, periodFilter])
+
+  const dispatchTrendData = useMemo(() => {
+    const days = 7
+    const now = new Date()
+    return Array.from({ length: days }, (_, index) => {
+      const day = new Date(now)
+      day.setHours(0, 0, 0, 0)
+      day.setDate(day.getDate() - (days - 1 - index))
+      const nextDay = new Date(day)
+      nextDay.setDate(nextDay.getDate() + 1)
+      const count = consignments.filter((item) => {
+        const time = new Date(item.createdAt).getTime()
+        return time >= day.getTime() && time < nextDay.getTime()
+      }).length
+
+      return {
+        label: day.toLocaleDateString('en-PK', { weekday: 'short' }),
+        count,
+      }
+    })
+  }, [consignments])
+
+  const maxDispatchCount = Math.max(...dispatchTrendData.map((item) => item.count), 1)
 
   const routeKpis = useMemo(() => {
     return {
@@ -208,6 +299,24 @@ export default function OwnerDashboardPage() {
         />
       </section>
 
+      <section className="rounded-2xl border border-outline-variant/15 bg-surface-container-lowest p-5 shadow-sm">
+        <div className="mb-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Recurring Performance</p>
+          <h4 className="mt-1 font-headline text-xl font-black text-on-surface">Executive Period Comparison</h4>
+          <p className="text-xs font-medium text-on-surface-variant">Current selected period compared with the immediately previous matching period.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <ExecutiveMetric label="Dispatch Growth" value={formatChange(executiveStats.dispatchChange)} tone={executiveStats.dispatchChange} />
+          <ExecutiveMetric label="Revenue Growth" value={formatChange(executiveStats.revenueChange)} tone={executiveStats.revenueChange} />
+          <ExecutiveMetric label="Delivered Growth" value={formatChange(executiveStats.deliveredChange)} tone={executiveStats.deliveredChange} />
+          <ExecutiveMetric label="Tonnage Growth" value={formatChange(executiveStats.tonsChange)} tone={executiveStats.tonsChange} />
+          <ExecutiveMetric label="Completion Rate" value={`${executiveStats.completionRate}%`} helper="Delivered or closed orders" />
+          <ExecutiveMetric label="Payment Collection" value={`${executiveStats.collectionRate}%`} helper="Verified payments in period" />
+          <ExecutiveMetric label="Average Load" value={`${executiveStats.averageLoad.toFixed(1)} tons`} helper="Average weight per dispatch" />
+          <ExecutiveMetric label="Revenue Per Order" value={`PKR ${formatPkr(Math.round(executiveStats.revenuePerOrder))}`} helper="Verified revenue efficiency" />
+        </div>
+      </section>
+
       <section className="grid grid-cols-1 gap-8">
         <DetailCard title="Route Summary">
           <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -267,15 +376,28 @@ export default function OwnerDashboardPage() {
       <section className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="rounded-xl border border-outline-variant/10 bg-primary p-6 text-white lg:col-span-1">
           <h4 className="font-headline text-lg font-bold">Dispatch Trends</h4>
-          <p className="mb-4 text-xs text-primary-fixed-dim/80">Last 7 periods</p>
-          <div className="flex h-24 items-end gap-2">
-            {trendSeries.map((point, idx) => (
-              <div
-                key={`${point}-${idx}`}
-                className={`flex-1 rounded-t ${idx === trendSeries.length - 1 ? 'bg-secondary' : 'bg-primary-fixed-dim/20'}`}
-                style={{ height: `${point}%` }}
-              />
+          <p className="mb-4 text-xs text-primary-fixed-dim/80">Actual dispatch volume for the last 7 days</p>
+          <div className="flex h-32 items-end gap-2">
+            {dispatchTrendData.map((point, idx) => (
+              <div key={point.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
+                <span className="text-[10px] font-black text-white">{point.count}</span>
+                <div
+                  className={`w-full rounded-t ${idx === dispatchTrendData.length - 1 ? 'bg-secondary' : 'bg-primary-fixed-dim/30'}`}
+                  style={{ height: `${Math.max(8, Math.round((point.count / maxDispatchCount) * 85))}%` }}
+                />
+                <span className="text-[9px] font-bold text-primary-fixed-dim/80">{point.label}</span>
+              </div>
             ))}
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-2 border-t border-white/10 pt-4">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-primary-fixed-dim/70">7-Day Total</p>
+              <p className="mt-1 font-headline text-xl font-black">{dispatchTrendData.reduce((sum, item) => sum + item.count, 0)}</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-primary-fixed-dim/70">Daily Average</p>
+              <p className="mt-1 font-headline text-xl font-black">{(dispatchTrendData.reduce((sum, item) => sum + item.count, 0) / 7).toFixed(1)}</p>
+            </div>
           </div>
         </div>
 
@@ -417,6 +539,24 @@ function ScanDetail({ label, value }) {
     <div className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-4">
       <p className="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant">{label}</p>
       <p className="mt-2 break-words text-sm font-black text-on-surface">{value}</p>
+    </div>
+  )
+}
+
+function ExecutiveMetric({ label, value, helper, tone }) {
+  const toneClass = typeof tone === 'number'
+    ? tone > 0
+      ? 'text-tertiary'
+      : tone < 0
+        ? 'text-error'
+        : 'text-on-surface'
+    : 'text-primary'
+
+  return (
+    <div className="rounded-xl border border-outline-variant/15 bg-surface-container-low p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant">{label}</p>
+      <p className={`mt-2 font-headline text-lg font-black ${toneClass}`}>{value}</p>
+      {helper ? <p className="mt-1 text-xs font-medium text-on-surface-variant">{helper}</p> : null}
     </div>
   )
 }

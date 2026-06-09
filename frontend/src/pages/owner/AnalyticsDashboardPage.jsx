@@ -42,6 +42,13 @@ const STATUS_COLORS = {
   CANCELLED: '#ef4444',
 }
 
+const RANGE_OPTIONS = [
+  { value: '7D', label: '7 Days', days: 7 },
+  { value: '30D', label: '30 Days', days: 30 },
+  { value: '90D', label: '90 Days', days: 90 },
+  { value: 'ALL', label: 'All Time', days: null },
+]
+
 function isPaidPayment(payment) {
   const status = String(payment?.status || '').toUpperCase()
   return status === 'PAID' || status === 'VERIFIED'
@@ -67,12 +74,24 @@ function normalizeStatus(status) {
   return legacyMap[normalized] || normalized
 }
 
+function percentChange(current, previous) {
+  if (previous === 0) return current > 0 ? 100 : 0
+  return Math.round(((current - previous) / previous) * 100)
+}
+
+function changeLabel(change) {
+  if (change === null || change === undefined) return 'All-time total'
+  if (change === 0) return 'No change'
+  return `${change > 0 ? '+' : ''}${change}% vs prior period`
+}
+
 export default function AnalyticsDashboardPage() {
   const { consignments, payments, drivers, trucks } = useRoleSystem()
 
   // State
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState('ALL')
+  const [rangeFilter, setRangeFilter] = useState('30D')
   const [selectedConsignmentForModal, setSelectedConsignmentForModal] = useState(null)
 
   // Document Title
@@ -80,41 +99,89 @@ export default function AnalyticsDashboardPage() {
     document.title = 'SandTrack - Analytics Dashboard'
   }, [])
 
+  const selectedRange = RANGE_OPTIONS.find((option) => option.value === rangeFilter) || RANGE_OPTIONS[1]
+
+  const rangeData = useMemo(() => {
+    if (!selectedRange.days) {
+      return {
+        consignments,
+        payments,
+        previousConsignments: [],
+        previousPayments: [],
+      }
+    }
+
+    const now = Date.now()
+    const duration = selectedRange.days * 24 * 60 * 60 * 1000
+    const currentStart = now - duration
+    const previousStart = currentStart - duration
+    const inRange = (value, start, end) => {
+      const time = new Date(value).getTime()
+      return Number.isFinite(time) && time >= start && time < end
+    }
+
+    return {
+      consignments: consignments.filter((item) => inRange(item.createdAt, currentStart, now)),
+      payments: payments.filter((item) => inRange(item.verifiedAt || item.createdAt, currentStart, now)),
+      previousConsignments: consignments.filter((item) => inRange(item.createdAt, previousStart, currentStart)),
+      previousPayments: payments.filter((item) => inRange(item.verifiedAt || item.createdAt, previousStart, currentStart)),
+    }
+  }, [consignments, payments, selectedRange.days])
+
   // 1. KPI Aggregators
   const kpis = useMemo(() => {
-    const totalConsignments = consignments.length
+    const totalConsignments = rangeData.consignments.length
     
-    const totalRevenue = payments
+    const totalRevenue = rangeData.payments
       .filter(isPaidPayment)
       .reduce((sum, p) => sum + p.amount, 0)
       
-    const pendingPaymentsCount = payments
+    const pendingPaymentsCount = rangeData.payments
       .filter(isPendingPayment)
       .length
       
-    const flaggedPaymentsCount = payments
+    const flaggedPaymentsCount = rangeData.payments
       .filter(isFlaggedPayment)
       .length
 
+    const previousRevenue = rangeData.previousPayments
+      .filter(isPaidPayment)
+      .reduce((sum, p) => sum + p.amount, 0)
+    const delivered = rangeData.consignments.filter((item) => ['DELIVERED', 'CLOSED', 'BILLED'].includes(normalizeStatus(item.status))).length
+    const previousDelivered = rangeData.previousConsignments.filter((item) => ['DELIVERED', 'CLOSED', 'BILLED'].includes(normalizeStatus(item.status))).length
+    const totalTons = rangeData.consignments.reduce((sum, item) => sum + Number(item.netWeight || 0), 0)
+    const previousTons = rangeData.previousConsignments.reduce((sum, item) => sum + Number(item.netWeight || 0), 0)
+    const verifiedPayments = rangeData.payments.filter(isPaidPayment).length
+    const hasComparison = Boolean(selectedRange.days)
+
     return {
-      consignments: { value: totalConsignments, change: '' },
-      revenue: { value: totalRevenue, change: '' },
-      pending: { value: pendingPaymentsCount, change: '' },
-      flagged: { value: flaggedPaymentsCount, change: '' },
+      consignments: { value: totalConsignments, change: hasComparison ? percentChange(totalConsignments, rangeData.previousConsignments.length) : null },
+      revenue: { value: totalRevenue, change: hasComparison ? percentChange(totalRevenue, previousRevenue) : null },
+      pending: { value: pendingPaymentsCount, change: hasComparison ? percentChange(pendingPaymentsCount, rangeData.previousPayments.filter(isPendingPayment).length) : null },
+      flagged: { value: flaggedPaymentsCount, change: hasComparison ? percentChange(flaggedPaymentsCount, rangeData.previousPayments.filter(isFlaggedPayment).length) : null },
+      delivered,
+      deliveredChange: hasComparison ? percentChange(delivered, previousDelivered) : null,
+      totalTons,
+      tonsChange: hasComparison ? percentChange(totalTons, previousTons) : null,
+      completionRate: totalConsignments ? Math.round((delivered / totalConsignments) * 100) : 0,
+      collectionRate: rangeData.payments.length ? Math.round((verifiedPayments / rangeData.payments.length) * 100) : 0,
+      averageLoad: totalConsignments ? totalTons / totalConsignments : 0,
+      revenuePerOrder: totalConsignments ? totalRevenue / totalConsignments : 0,
     }
-  }, [consignments, payments])
+  }, [rangeData, selectedRange.days])
 
   // 2. Chart 1: Daily Revenue last 30 days
   const dailyRevenueData = useMemo(() => {
     const dailyMap = {}
     const now = Date.now()
-    for (let i = 29; i >= 0; i--) {
+    const chartDays = selectedRange.days ? Math.min(selectedRange.days, 30) : 30
+    for (let i = chartDays - 1; i >= 0; i--) {
       const d = new Date(now - i * 24 * 60 * 60 * 1000)
       const label = d.toLocaleDateString('en-PK', { day: '2-digit', month: 'short' })
       dailyMap[label] = 0
     }
 
-    payments.forEach(p => {
+    rangeData.payments.forEach(p => {
       if (isPaidPayment(p)) {
         const dateLabel = new Date(p.verifiedAt || p.createdAt).toLocaleDateString('en-PK', { day: '2-digit', month: 'short' })
         if (dailyMap[dateLabel] !== undefined) {
@@ -129,14 +196,14 @@ export default function AnalyticsDashboardPage() {
       date,
       amount: hasData ? amount : 0
     }))
-  }, [payments])
+  }, [rangeData.payments, selectedRange.days])
 
   // 3. Chart 2: Cash vs Bank Donut Data
   const paymentSplitData = useMemo(() => {
     let cashCount = 0
     let bankCount = 0
     
-    payments.forEach((p) => {
+    rangeData.payments.forEach((p) => {
       if (!isPaidPayment(p)) {
         return
       }
@@ -152,7 +219,7 @@ export default function AnalyticsDashboardPage() {
       { name: 'Bank Transfer', value: bankCount },
       { name: 'Cash Payment', value: cashCount },
     ]
-  }, [payments])
+  }, [rangeData.payments])
 
   // 4. Chart 3: Consignments by Status Bar Chart Data
   const statusChartData = useMemo(() => {
@@ -169,7 +236,7 @@ export default function AnalyticsDashboardPage() {
       CANCELLED: 0,
     }
 
-    consignments.forEach(c => {
+    rangeData.consignments.forEach(c => {
       const normalized = normalizeStatus(c.status)
       if (counts[normalized] !== undefined) {
         counts[normalized]++
@@ -181,7 +248,49 @@ export default function AnalyticsDashboardPage() {
       count,
       color: STATUS_COLORS[name] || '#64748b'
     }))
-  }, [consignments])
+  }, [rangeData.consignments])
+
+  const executiveInsights = useMemo(() => {
+    const pendingAmount = rangeData.payments
+      .filter(isPendingPayment)
+      .reduce((sum, item) => sum + Number(item.amount || 0), 0)
+    const activeConsignments = rangeData.consignments.filter((item) =>
+      ['SCAN_PENDING', 'IN_TRANSIT', 'ARRIVED', 'DELIVERY_PENDING_VERIFICATION'].includes(normalizeStatus(item.status))
+    ).length
+    const mostCommonStatus = statusChartData.reduce(
+      (highest, item) => item.count > highest.count ? item : highest,
+      { name: 'NO DATA', count: 0 }
+    )
+    const bestRevenueDay = dailyRevenueData.reduce(
+      (highest, item) => item.amount > highest.amount ? item : highest,
+      { date: 'N/A', amount: 0 }
+    )
+
+    const healthMessages = []
+    if (kpis.completionRate >= 80) {
+      healthMessages.push('Delivery completion is strong for the selected period.')
+    } else if (kpis.consignments.value > 0) {
+      healthMessages.push('Delivery completion is below 80%; review active and arrived consignments.')
+    } else {
+      healthMessages.push('No consignments were created in the selected period.')
+    }
+
+    if (kpis.collectionRate >= 80) {
+      healthMessages.push('Payment collection is healthy.')
+    } else if (rangeData.payments.length > 0) {
+      healthMessages.push('Payment collection needs attention from the accountant.')
+    } else {
+      healthMessages.push('No payment records exist in this period.')
+    }
+
+    return {
+      pendingAmount,
+      activeConsignments,
+      mostCommonStatus,
+      bestRevenueDay,
+      healthMessages,
+    }
+  }, [dailyRevenueData, kpis, rangeData.consignments, rangeData.payments, statusChartData])
 
   // Click handler on Bar Chart to filter the consignment list
   const handleBarClick = (data) => {
@@ -194,11 +303,11 @@ export default function AnalyticsDashboardPage() {
 
   // 5. Paginated Consignment Table Logic
   const filteredConsignments = useMemo(() => {
-    return consignments.filter(c => {
+    return rangeData.consignments.filter(c => {
       if (statusFilter === 'ALL') return true
       return normalizeStatus(c.status) === statusFilter.toUpperCase()
     })
-  }, [consignments, statusFilter])
+  }, [rangeData.consignments, statusFilter])
 
   const ITEMS_PER_PAGE = 10
   const totalPages = Math.ceil(filteredConsignments.length / ITEMS_PER_PAGE) || 1
@@ -252,7 +361,7 @@ export default function AnalyticsDashboardPage() {
     <div className="space-y-6">
       
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-outline-variant/10 pb-4">
+      <div className="flex flex-col gap-4 border-b border-outline-variant/10 pb-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <h1 className="font-headline text-2xl sm:text-3xl font-extrabold text-on-background tracking-tight">
             Terminal Intelligence & Analytics
@@ -261,14 +370,60 @@ export default function AnalyticsDashboardPage() {
             Real-time logistical throughput, cash flows, and payment audits.
           </p>
         </div>
-        <button
-          onClick={handleExportCSV}
-          className="app-btn-secondary px-4 py-2.5 flex items-center justify-center gap-2 border border-outline-variant hover:bg-surface-container-high"
-        >
-          <span className="material-symbols-outlined text-base">download</span>
-          Export to CSV
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-wrap gap-2 rounded-xl border border-outline-variant/15 bg-surface-container-low p-2">
+            {RANGE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  setRangeFilter(option.value)
+                  setCurrentPage(1)
+                }}
+                className={`rounded-lg px-3 py-2 text-xs font-black transition-colors ${
+                  rangeFilter === option.value
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-on-surface-variant hover:bg-surface-container-high'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={handleExportCSV}
+            className="app-btn-secondary px-4 py-2.5 flex items-center justify-center gap-2 border border-outline-variant hover:bg-surface-container-high"
+          >
+            <span className="material-symbols-outlined text-base">download</span>
+            Export to CSV
+          </button>
+        </div>
       </div>
+
+      <section className="rounded-2xl border border-outline-variant/15 bg-gradient-to-br from-primary/10 via-surface-container-lowest to-secondary/10 p-5 shadow-sm">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Executive Reading</p>
+        <div className="mt-3 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div>
+            <h2 className="font-headline text-xl font-black text-on-surface">
+              {selectedRange.label} performance overview
+            </h2>
+            <div className="mt-3 space-y-2">
+              {executiveInsights.healthMessages.map((message) => (
+                <p key={message} className="flex items-start gap-2 text-sm font-medium text-on-surface">
+                  <span className="material-symbols-outlined mt-0.5 text-base text-primary">insights</span>
+                  {message}
+                </p>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <InsightMetric label="Active Orders" value={executiveInsights.activeConsignments} />
+            <InsightMetric label="Pending Amount" value={formatPKR(executiveInsights.pendingAmount)} />
+            <InsightMetric label="Largest Queue" value={executiveInsights.mostCommonStatus.name.replaceAll('_', ' ')} />
+            <InsightMetric label="Best Revenue Day" value={executiveInsights.bestRevenueDay.date} />
+          </div>
+        </div>
+      </section>
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -278,7 +433,7 @@ export default function AnalyticsDashboardPage() {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Total Consignments</p>
             <p className="font-headline text-3xl font-black text-on-surface mt-1">{kpis.consignments.value}</p>
-            <span className="text-[10px] font-bold text-on-surface-variant">Live database total</span>
+            <span className={`text-[10px] font-bold ${kpis.consignments.change >= 0 ? 'text-tertiary' : 'text-error'}`}>{changeLabel(kpis.consignments.change)}</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
             <span className="material-symbols-outlined">local_shipping</span>
@@ -292,7 +447,7 @@ export default function AnalyticsDashboardPage() {
             <p className="font-headline text-lg sm:text-xl md:text-2xl font-black text-on-surface mt-1.5 truncate">
               {formatPKR(kpis.revenue.value)}
             </p>
-            <span className="text-[10px] font-bold text-on-surface-variant">Verified payments only</span>
+            <span className={`text-[10px] font-bold ${kpis.revenue.change >= 0 ? 'text-tertiary' : 'text-error'}`}>{changeLabel(kpis.revenue.change)}</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary">
             <span className="material-symbols-outlined">payments</span>
@@ -304,7 +459,7 @@ export default function AnalyticsDashboardPage() {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Pending Payments</p>
             <p className="font-headline text-3xl font-black text-on-surface mt-1">{kpis.pending.value}</p>
-            <span className="text-[10px] font-bold text-on-surface-variant">Awaiting verification</span>
+            <span className={`text-[10px] font-bold ${kpis.pending.change <= 0 ? 'text-tertiary' : 'text-error'}`}>{changeLabel(kpis.pending.change)}</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
             <span className="material-symbols-outlined">pending_actions</span>
@@ -316,7 +471,7 @@ export default function AnalyticsDashboardPage() {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Flagged / Held Payments</p>
             <p className="font-headline text-3xl font-black text-on-surface mt-1">{kpis.flagged.value}</p>
-            <span className="text-[10px] font-bold text-on-surface-variant">Needs review</span>
+            <span className={`text-[10px] font-bold ${kpis.flagged.change <= 0 ? 'text-tertiary' : 'text-error'}`}>{changeLabel(kpis.flagged.change)}</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-error/10 flex items-center justify-center text-error">
             <span className="material-symbols-outlined">gpp_maybe</span>
@@ -325,6 +480,17 @@ export default function AnalyticsDashboardPage() {
 
       </div>
 
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <DetailMetric label="Delivered / Closed" value={kpis.delivered} change={kpis.deliveredChange} helper="Completed orders in period" />
+        <DetailMetric label="Total Tons Moved" value={`${kpis.totalTons.toFixed(1)} tons`} change={kpis.tonsChange} helper="Total dispatched weight" />
+        <DetailMetric label="Completion Rate" value={`${kpis.completionRate}%`} helper="Completed orders divided by total orders" />
+        <DetailMetric label="Payment Collection" value={`${kpis.collectionRate}%`} helper="Verified payments divided by all payments" />
+        <DetailMetric label="Average Load" value={`${kpis.averageLoad.toFixed(1)} tons`} helper="Average weight per consignment" />
+        <DetailMetric label="Revenue Per Order" value={formatPKR(Math.round(kpis.revenuePerOrder))} helper="Verified revenue efficiency" />
+        <DetailMetric label="Verified Transactions" value={rangeData.payments.filter(isPaidPayment).length} helper="Paid payment records" />
+        <DetailMetric label="Fleet Availability" value={`${trucks.filter((item) => item.status === 'active').length} trucks`} helper={`${drivers.filter((item) => item.status === 'active').length} active drivers`} />
+      </section>
+
       {/* Row 1 Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -332,7 +498,7 @@ export default function AnalyticsDashboardPage() {
         <div className="lg:col-span-2">
           <SectionCard 
             title="Daily Revenue Trend" 
-            subtitle="PKR value from verified bank and cash sand payments (last 30 days)"
+            subtitle={`PKR value from verified payments within ${selectedRange.label.toLowerCase()}`}
           >
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -395,7 +561,7 @@ export default function AnalyticsDashboardPage() {
                 </div>
               )}
               <p className="text-xs font-semibold text-on-surface-variant mt-2">
-                Verified Transaction Volume: {payments.filter(isPaidPayment).length} Payments
+                Verified Transaction Volume: {rangeData.payments.filter(isPaidPayment).length} Payments
               </p>
             </div>
           </SectionCard>
@@ -566,6 +732,34 @@ export default function AnalyticsDashboardPage() {
         </div>
       )}
 
+    </div>
+  )
+}
+
+function InsightMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border border-white/70 bg-white/70 p-3 shadow-sm">
+      <p className="text-[9px] font-black uppercase tracking-[0.15em] text-on-surface-variant">{label}</p>
+      <p className="mt-1 break-words text-sm font-black text-on-surface">{value}</p>
+    </div>
+  )
+}
+
+function DetailMetric({ label, value, helper, change }) {
+  const changeTone = typeof change === 'number'
+    ? change > 0
+      ? 'text-tertiary'
+      : change < 0
+        ? 'text-error'
+        : 'text-on-surface-variant'
+    : ''
+
+  return (
+    <div className="rounded-2xl border border-outline-variant/15 bg-surface-container-lowest p-4 shadow-sm">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant">{label}</p>
+      <p className="mt-2 font-headline text-xl font-black text-primary">{value}</p>
+      {change !== undefined ? <p className={`mt-1 text-xs font-bold ${changeTone || 'text-on-surface-variant'}`}>{changeLabel(change)}</p> : null}
+      <p className="mt-1 text-xs font-medium text-on-surface-variant">{helper}</p>
     </div>
   )
 }
